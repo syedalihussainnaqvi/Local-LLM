@@ -1,0 +1,13 @@
+[
+  {
+    "platform": "Reddit",
+    "handle": "tech_researcher",
+    "timestamp_utc": "2026-10-22T10:00:00Z",
+    "text": "Deep Learning advancements in local model inference architectures.\nExploring INT8 quantization and memory residency patterns.",
+    "url": "https://www.reddit.com/r/MachineLearning/comments/xyz123",
+    "engagement": {"score": 342, "comments": 88},
+    "language": "en",
+    "is_unverified_claim": true,
+    "compliance_notice": "Public content retrieved under platform standard access terms. Claims unverified."
+  }
+]
