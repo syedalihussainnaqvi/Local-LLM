@@ -112,16 +112,64 @@ class PolicyGateway:
                     return True
             except ValueError:
                 continue
-        return False
-
     def add_grant(self, grant: Grant, provenance: InputProvenance) -> bool:
-        """Grants can ONLY be created from trusted user input, never from model or untrusted web/file text."""
+        """Grants can ONLY be created from trusted user input, never from model or untrusted web/file text (C-06)."""
         if provenance != InputProvenance.TRUSTED_USER:
             logger.warning(f"Rejected grant creation from untrusted provenance: {provenance}")
             return False
         self.active_grants[grant.grant_id] = grant
         self.grant_use_counts[grant.grant_id] = 0
         return True
+
+    def check_active_grant(self, grant_id: str, action_type: str, target: str, payload_data: Optional[str] = None) -> Tuple[bool, str]:
+        """Verify an active Grant object for sensitive T3 actions (C-06)."""
+        if grant_id not in self.active_grants:
+            return False, f"Grant '{grant_id}' does not exist or was never granted."
+
+        grant = self.active_grants[grant_id]
+        now = time.time()
+        if now > grant.expiry_timestamp:
+            return False, f"Grant '{grant_id}' has expired (expired at {grant.expiry_timestamp}, current {now})."
+
+        uses = self.grant_use_counts.get(grant_id, 0)
+        if uses >= grant.max_uses:
+            return False, f"Grant '{grant_id}' has exceeded maximum permitted uses ({grant.max_uses})."
+
+        if grant.action_type != action_type:
+            return False, f"Grant action mismatch: granted '{grant.action_type}', attempted '{action_type}'."
+
+        canon_target = self.canonicalize_path(target)
+        canon_grant_target = self.canonicalize_path(grant.exact_target)
+        if canon_target != canon_grant_target:
+            return False, f"Grant target mismatch: granted '{canon_grant_target}', attempted '{canon_target}'."
+
+        if grant.payload_hash and payload_data:
+            computed_hash = hashlib.sha256(payload_data.encode("utf-8")).hexdigest()
+            if computed_hash != grant.payload_hash:
+                return False, f"Grant payload hash mismatch: granted '{grant.payload_hash}', got '{computed_hash}'."
+
+        # Increment use count
+        self.grant_use_counts[grant_id] = uses + 1
+        return True, "Grant valid and authorized."
+
+    @staticmethod
+    def validate_charter_consistency(charter_goal: str, action_type: str, target: str) -> Tuple[bool, str]:
+        """C-03: Ensure proposed action aligns with user's charter and is not a poisoned injection."""
+        c_lower = charter_goal.lower()
+        t_lower = target.lower()
+
+        # If user asked for web research or document writing, but action tries to delete files or run shell commands
+        if action_type in ("FILE_DELETE", "SYSTEM_MUTATE"):
+            if "delete" not in c_lower and "remove" not in c_lower:
+                return False, f"Action '{action_type}' on '{target}' is inconsistent with task charter: '{charter_goal}'"
+
+        # Disregard prompt injection attempts
+        injection_markers = ["disregard previous", "ignore previous", "override system", "new instructions:"]
+        for marker in injection_markers:
+            if marker in t_lower:
+                return False, f"Target contains prompt injection marker: '{marker}'"
+
+        return True, "Action is consistent with charter."
 
     def validate_action(
         self,
