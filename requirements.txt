@@ -1,0 +1,31 @@
+# Core LLM & Inference Dependencies
+torch>=2.0.0
+transformers>=4.40.0
+peft>=0.10.0
+accelerate>=0.28.0
+safetensors>=0.4.0
+
+# Web Framework
+flask>=2.3.0
+
+# Web Scraping & HTML Parsing
+requests>=2.28.0
+beautifulsoup4>=4.11.0
+urllib3>=1.26.0
+lxml>=4.9.0
+feedparser>=6.0.0
+
+# Numerics & Retrieval Engine
+numpy>=1.22.0
+scipy>=1.9.0
+
+# Optional Web Discovery & Testing
+pytest>=7.0.0
+
+# Desktop & OS Automation (Computer Use)
+pyautogui>=0.9.54
+pygetwindow>=0.0.9
+pyscreeze>=1.0.1
+pyperclip>=1.8.2
+psutil>=5.9.0
+pillow>=9.0.0

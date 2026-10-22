@@ -1,0 +1,16 @@
+{
+  "base_model": "Qwen/Qwen2.5-1.5B-Instruct",
+  "dataset": "OpenAssistant/oasst1 or supplied OpenAssistant JSONL.GZ",
+  "seed": 42,
+  "max_length": 1024,
+  "train_examples": 3097,
+  "validation_examples": 296,
+  "test_examples": 297,
+  "baseline_test_loss": 1.6006979942321777,
+  "final_test_loss": 1.454708456993103,
+  "final_test_perplexity": 4.2832345364766775,
+  "test_loss_relative_improvement_percent": 9.120367350063615,
+  "final_validation_loss": 1.3916658163070679,
+  "training_runtime_seconds": 13279.9764,
+  "note": "Loss/perplexity measure token prediction, not factual accuracy or reasoning quality."
+}
