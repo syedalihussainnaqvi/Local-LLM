@@ -958,6 +958,311 @@
       text-align: center;
     }
 
+    /* ── ChatGPT-style Voice Call Button on Search/Input Bar ── */
+    .voice-call-btn {
+      background: transparent;
+      color: var(--text-muted);
+      border: 1px solid transparent;
+      margin-right: 2px;
+    }
+
+    .voice-call-btn:hover {
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text-main);
+      transform: scale(1.06);
+    }
+
+    [data-theme="light"] .voice-call-btn:hover {
+      background: rgba(0, 0, 0, 0.06);
+      color: #111111;
+    }
+
+    .voice-call-btn.active-pulse {
+      color: #10b981;
+      animation: voiceBtnGlow 1.6s infinite ease-in-out;
+    }
+
+    @keyframes voiceBtnGlow {
+      0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.5); }
+      70% { box-shadow: 0 0 0 8px rgba(16, 185, 129, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+    }
+
+    /* ── ChatGPT-style Full Voice Call Overlay ── */
+    .voice-modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(circle at center, #181920 0%, #0c0d11 100%);
+      z-index: 10000;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 32px 24px;
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      color: #ededed;
+      animation: voiceFadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes voiceFadeIn {
+      from { opacity: 0; transform: scale(0.98); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    .voice-modal-topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      max-width: 900px;
+      width: 100%;
+      margin: 0 auto;
+    }
+
+    .voice-model-badge {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 12.5px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      color: #e5e7eb;
+    }
+
+    .voice-dot-live {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #10b981;
+      box-shadow: 0 0 8px #10b981;
+      animation: voiceLiveBlink 1.8s infinite;
+    }
+
+    @keyframes voiceLiveBlink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.35; }
+    }
+
+    .voice-icon-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: #ededed;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .voice-icon-btn:hover {
+      background: rgba(255, 255, 255, 0.16);
+      transform: scale(1.05);
+    }
+
+    .voice-center-stage {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      flex: 1;
+      gap: 32px;
+      max-width: 600px;
+      margin: 0 auto;
+      text-align: center;
+    }
+
+    /* ChatGPT Iconic Orb */
+    .voice-orb-container {
+      position: relative;
+      width: 180px;
+      height: 180px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .voice-orb-glow {
+      position: absolute;
+      inset: -20px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(56, 189, 248, 0.3) 0%, rgba(168, 85, 247, 0.15) 50%, transparent 70%);
+      filter: blur(24px);
+      transition: all 0.5s ease;
+      pointer-events: none;
+    }
+
+    .voice-orb-core {
+      position: relative;
+      width: 130px;
+      height: 130px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 35%, #ffffff 0%, #60a5fa 35%, #8b5cf6 70%, #1e1b4b 100%);
+      box-shadow: 0 0 45px rgba(96, 165, 250, 0.5), inset 0 0 25px rgba(255, 255, 255, 0.6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.15s ease-out, box-shadow 0.3s ease;
+      animation: orbFloat 4s ease-in-out infinite;
+    }
+
+    @keyframes orbFloat {
+      0%, 100% { transform: translateY(0px) scale(1); }
+      50% { transform: translateY(-6px) scale(1.03); }
+    }
+
+    .voice-orb-container.state-listening .voice-orb-core {
+      background: radial-gradient(circle at 35% 35%, #ffffff 0%, #38bdf8 40%, #3b82f6 75%, #0f172a 100%);
+      box-shadow: 0 0 50px rgba(56, 189, 248, 0.6), inset 0 0 30px rgba(255, 255, 255, 0.7);
+    }
+
+    .voice-orb-container.state-thinking .voice-orb-core {
+      background: conic-gradient(from 0deg, #ec4899, #8b5cf6, #3b82f6, #ec4899);
+      box-shadow: 0 0 60px rgba(236, 72, 153, 0.65);
+      animation: orbSpin 2s linear infinite;
+    }
+
+    @keyframes orbSpin {
+      0% { transform: rotate(0deg) scale(1.02); }
+      100% { transform: rotate(360deg) scale(1.02); }
+    }
+
+    .voice-orb-container.state-speaking .voice-orb-core {
+      background: radial-gradient(circle at 35% 35%, #ffffff 0%, #34d399 35%, #059669 70%, #064e3b 100%);
+      box-shadow: 0 0 65px rgba(52, 211, 153, 0.75), inset 0 0 30px rgba(255, 255, 255, 0.7);
+      animation: orbSpeakingPulse 1.2s infinite ease-in-out;
+    }
+
+    @keyframes orbSpeakingPulse {
+      0%, 100% { transform: scale(1.08); }
+      50% { transform: scale(1.18); }
+    }
+
+    .voice-orb-container.state-muted .voice-orb-core {
+      background: radial-gradient(circle at 35% 35%, #9ca3af 0%, #4b5563 50%, #1f2937 100%);
+      box-shadow: 0 0 25px rgba(239, 68, 68, 0.4);
+      animation: none;
+      filter: grayscale(0.5);
+    }
+
+    .voice-orb-ring {
+      position: absolute;
+      border-radius: 50%;
+      border: 1.5px solid rgba(255, 255, 255, 0.2);
+      pointer-events: none;
+    }
+    .ring-1 { inset: -14px; animation: ringPulse 2.8s infinite linear; }
+    .ring-2 { inset: -28px; animation: ringPulse 2.8s infinite linear 0.9s; }
+    .ring-3 { inset: -44px; animation: ringPulse 2.8s infinite linear 1.8s; }
+
+    @keyframes ringPulse {
+      0% { opacity: 0.8; transform: scale(0.92); }
+      100% { opacity: 0; transform: scale(1.22); }
+    }
+
+    .voice-status-pill {
+      display: inline-block;
+      padding: 6px 18px;
+      border-radius: 24px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      font-size: 14px;
+      font-weight: 500;
+      color: #f3f4f6;
+      letter-spacing: 0.3px;
+      transition: all 0.2s;
+    }
+
+    .voice-subtitle-card {
+      min-height: 72px;
+      max-height: 140px;
+      overflow-y: auto;
+      width: 100%;
+      background: rgba(18, 18, 22, 0.65);
+      border: 1px solid rgba(255, 255, 255, 0.09);
+      border-radius: 16px;
+      padding: 16px 20px;
+      backdrop-filter: blur(16px);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+    }
+
+    .voice-live-caption {
+      font-size: 15px;
+      line-height: 1.55;
+      color: #d1d5db;
+    }
+    .voice-live-caption.user-text {
+      color: #93c5fd;
+      font-style: italic;
+    }
+    .voice-live-caption.assistant-text {
+      color: #f9fafb;
+      font-weight: 500;
+    }
+
+    .voice-bottom-controls {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      max-width: 600px;
+      width: 100%;
+      margin: 0 auto;
+    }
+
+    .voice-ctrl-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: #ededed;
+      border-radius: 16px;
+      padding: 12px 22px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      min-width: 90px;
+    }
+
+    .voice-ctrl-btn:hover {
+      background: rgba(255, 255, 255, 0.16);
+      transform: translateY(-2px);
+    }
+
+    .voice-ctrl-btn svg {
+      width: 22px;
+      height: 22px;
+      stroke: currentColor;
+    }
+
+    .voice-ctrl-btn.active-muted {
+      background: rgba(239, 68, 68, 0.2);
+      border-color: rgba(239, 68, 68, 0.5);
+      color: #fca5a5;
+    }
+
+    .voice-end-btn {
+      background: #ef4444;
+      border-color: #dc2626;
+      color: #ffffff;
+    }
+
+    .voice-end-btn:hover {
+      background: #dc2626;
+      border-color: #b91c1c;
+      transform: translateY(-2px);
+    }
+
     /* =========================================================================
        MODALS & DROPDOWNS
        ========================================================================= */
@@ -2016,6 +2321,21 @@
           ></textarea>
 
           <button
+            type="button"
+            class="input-action-btn voice-call-btn"
+            id="voice-call-btn"
+            onclick="openVoiceCallModal()"
+            title="Start Voice Call (ChatGPT Style)"
+          >
+            <!-- Microphone / Voice Wave Icon -->
+            <svg class="icon" style="stroke:currentColor; width:18px; height:18px;" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path>
+              <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+              <line x1="12" y1="19" x2="12" y2="22"></line>
+            </svg>
+          </button>
+
+          <button
             class="input-action-btn send-action-btn"
             id="action-btn"
             onclick="handleActionButtonClick()"
@@ -2294,6 +2614,73 @@
           ✅ Allow &amp; Execute
         </button>
       </div>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       CHATGPT-STYLE VOICE CALL MODAL OVERLAY
+       ========================================================================= -->
+  <div class="voice-modal-overlay" id="voice-call-modal" style="display: none;">
+    <!-- Top Bar: Header & Minimize/Close -->
+    <div class="voice-modal-topbar">
+      <div class="voice-model-badge">
+        <span class="voice-dot-live"></span>
+        <span>VOICE CALL &bull; QWEN 2.5</span>
+      </div>
+      <button class="voice-icon-btn" onclick="closeVoiceCallModal()" title="Close / End Call (Esc)">
+        <svg class="icon" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </button>
+    </div>
+
+    <!-- Center: The Fluid ChatGPT Orb & Visualizer -->
+    <div class="voice-center-stage">
+      <div class="voice-orb-container state-listening" id="voice-orb-container" onclick="handleVoiceOrbClick()" title="Click to barge-in / interrupt">
+        <div class="voice-orb-glow"></div>
+        <div class="voice-orb-core" id="voice-orb-core">
+          <div class="voice-orb-ring ring-1"></div>
+          <div class="voice-orb-ring ring-2"></div>
+          <div class="voice-orb-ring ring-3"></div>
+        </div>
+      </div>
+
+      <!-- Status label -->
+      <div class="voice-status-pill" id="voice-status-pill">Listening...</div>
+
+      <!-- Live Caption / Subtitle -->
+      <div class="voice-subtitle-card">
+        <div class="voice-live-caption" id="voice-live-caption">Say something to start speaking...</div>
+      </div>
+    </div>
+
+    <!-- Bottom Bar: Controls -->
+    <div class="voice-bottom-controls">
+      <!-- Mute Button -->
+      <button class="voice-ctrl-btn" id="voice-mute-btn" onclick="toggleVoiceMute()" title="Mute Microphone (M)">
+        <svg class="icon" id="voice-mute-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path>
+          <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+          <line x1="12" y1="19" x2="12" y2="22"></line>
+        </svg>
+        <span id="voice-mute-text">Mute</span>
+      </button>
+
+      <!-- Barge-in / Interrupt Button -->
+      <button class="voice-ctrl-btn" id="voice-barge-btn" onclick="triggerBargeIn()" title="Interrupt / Stop Speaking (Space)">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="6" y="4" width="4" height="16"></rect>
+          <rect x="14" y="4" width="4" height="16"></rect>
+        </svg>
+        <span>Interrupt</span>
+      </button>
+
+      <!-- End Call Button (Red Hangup) -->
+      <button class="voice-ctrl-btn voice-end-btn" onclick="closeVoiceCallModal()" title="End Voice Call">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="stroke: #ffffff;">
+          <path d="M10.68 13.31a16 16 0 0 0 3.41 2.6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7 2 2 0 0 1 1.72 2v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.42 19.42 0 0 1-6-6 19.8 19.8 0 0 1-3.11-8.69A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91"></path>
+          <line x1="23" y1="1" x2="1" y2="23" style="stroke: #ffffff; stroke-width: 2.5;"></line>
+        </svg>
+        <span>End Call</span>
+      </button>
     </div>
   </div>
 
@@ -3671,6 +4058,389 @@
       try { localStorage.setItem(THEME_KEY, next); } catch(e) {}
       showToast(next === 'light' ? '☀️ Light mode' : '🌙 Dark mode');
     }
+
+    // =========================================================================
+    // REAL-TIME VOICE CALL MODE (ChatGPT Style)
+    // =========================================================================
+    let voiceRecognition = null;
+    let voiceAudioCtx = null;
+    let voiceAnalyser = null;
+    let voiceMicrophoneStream = null;
+    let voiceAnimFrameId = null;
+    let isVoiceCallActive = false;
+    let isVoiceMuted = false;
+    let isSpeakingAssistant = false;
+    let voiceState = 'IDLE'; // IDLE | LISTENING | THINKING | SPEAKING
+    let currentUtterance = null;
+
+    function openVoiceCallModal() {
+      const modal = document.getElementById('voice-call-modal');
+      const btn = document.getElementById('voice-call-btn');
+      if (!modal) return;
+      modal.style.display = 'flex';
+      if (btn) btn.classList.add('active-pulse');
+      isVoiceCallActive = true;
+      setVoiceState('LISTENING');
+      startVoiceSession();
+    }
+
+    function closeVoiceCallModal() {
+      const modal = document.getElementById('voice-call-modal');
+      const btn = document.getElementById('voice-call-btn');
+      if (modal) modal.style.display = 'none';
+      if (btn) btn.classList.remove('active-pulse');
+      stopVoiceSession();
+    }
+
+    function setVoiceState(newState, label = null) {
+      voiceState = newState;
+      const orbContainer = document.getElementById('voice-orb-container');
+      const pill = document.getElementById('voice-status-pill');
+      if (!orbContainer || !pill) return;
+
+      orbContainer.classList.remove('state-listening', 'state-thinking', 'state-speaking', 'state-muted');
+
+      if (isVoiceMuted) {
+        orbContainer.classList.add('state-muted');
+        pill.innerText = 'Microphone Muted';
+        pill.style.borderColor = 'rgba(239, 68, 68, 0.4)';
+        return;
+      }
+
+      pill.style.borderColor = 'rgba(255, 255, 255, 0.12)';
+
+      if (newState === 'LISTENING') {
+        orbContainer.classList.add('state-listening');
+        pill.innerText = label || 'Listening...';
+      } else if (newState === 'THINKING') {
+        orbContainer.classList.add('state-thinking');
+        pill.innerText = label || 'Thinking...';
+      } else if (newState === 'SPEAKING') {
+        orbContainer.classList.add('state-speaking');
+        pill.innerText = label || 'Speaking...';
+      } else {
+        pill.innerText = label || 'Ready';
+      }
+    }
+
+    function updateVoiceCaption(text, type = 'user') {
+      const cap = document.getElementById('voice-live-caption');
+      if (!cap) return;
+      cap.className = `voice-live-caption ${type}-text`;
+      cap.innerText = text;
+    }
+
+    async function initVoiceAudioVisualizer() {
+      try {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return;
+        if (!voiceAudioCtx) {
+          const AudioContext = window.AudioContext || window.webkitAudioContext;
+          voiceAudioCtx = new AudioContext();
+        }
+        if (voiceAudioCtx.state === 'suspended') {
+          await voiceAudioCtx.resume();
+        }
+        if (!voiceMicrophoneStream) {
+          voiceMicrophoneStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+        }
+        const source = voiceAudioCtx.createMediaStreamSource(voiceMicrophoneStream);
+        voiceAnalyser = voiceAudioCtx.createAnalyser();
+        voiceAnalyser.fftSize = 64;
+        source.connect(voiceAnalyser);
+
+        const dataArray = new Uint8Array(voiceAnalyser.frequencyBinCount);
+        const core = document.getElementById('voice-orb-core');
+
+        function drawVisualizer() {
+          if (!isVoiceCallActive) return;
+          voiceAnimFrameId = requestAnimationFrame(drawVisualizer);
+          if (voiceState === 'LISTENING' && !isVoiceMuted && voiceAnalyser) {
+            voiceAnalyser.getByteFrequencyData(dataArray);
+            let sum = 0;
+            for (let i = 0; i < dataArray.length; i++) sum += dataArray[i];
+            const avg = sum / dataArray.length;
+            const scale = 1 + Math.min(0.35, (avg / 128) * 0.35);
+            if (core) {
+              core.style.transform = `scale(${scale})`;
+            }
+          }
+        }
+        drawVisualizer();
+      } catch (e) {
+        console.warn('Audio visualizer init (mic permission/context):', e);
+      }
+    }
+
+    function startVoiceSession() {
+      if (window.speechSynthesis) window.speechSynthesis.cancel();
+      initVoiceAudioVisualizer();
+
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRecognition) {
+        updateVoiceCaption("Speech recognition not supported in this browser. You can type in the search bar below.", 'assistant');
+        setVoiceState('IDLE', 'No Web Speech API');
+        return;
+      }
+
+      try {
+        voiceRecognition = new SpeechRecognition();
+        voiceRecognition.continuous = true;
+        voiceRecognition.interimResults = true;
+        voiceRecognition.lang = 'en-US';
+
+        voiceRecognition.onstart = () => {
+          if (!isVoiceMuted) setVoiceState('LISTENING');
+        };
+
+        voiceRecognition.onresult = (event) => {
+          if (isVoiceMuted) return;
+
+          let interimTranscript = '';
+          let finalTranscript = '';
+
+          for (let i = event.resultIndex; i < event.results.length; ++i) {
+            if (event.results[i].isFinal) {
+              finalTranscript += event.results[i][0].transcript;
+            } else {
+              interimTranscript += event.results[i][0].transcript;
+            }
+          }
+
+          if (isSpeakingAssistant && (interimTranscript.trim().length > 2 || finalTranscript.trim().length > 0)) {
+            triggerBargeIn();
+          }
+
+          if (interimTranscript) {
+            updateVoiceCaption(interimTranscript, 'user');
+          }
+
+          if (finalTranscript.trim()) {
+            updateVoiceCaption(finalTranscript.trim(), 'user');
+            handleUserVoiceUtterance(finalTranscript.trim());
+          }
+        };
+
+        voiceRecognition.onerror = (event) => {
+          console.warn('Voice recognition error:', event.error);
+          if (event.error === 'not-allowed') {
+            updateVoiceCaption("Microphone access denied. Please grant microphone permissions.", 'assistant');
+            setVoiceState('IDLE', 'Mic Denied');
+          }
+        };
+
+        voiceRecognition.onend = () => {
+          if (isVoiceCallActive && !isVoiceMuted) {
+            try { voiceRecognition.start(); } catch (e) {}
+          }
+        };
+
+        voiceRecognition.start();
+      } catch (err) {
+        console.error('Failed to start voice recognition:', err);
+      }
+    }
+
+    function stopVoiceSession() {
+      isVoiceCallActive = false;
+      if (voiceRecognition) {
+        try { voiceRecognition.abort(); } catch (e) {}
+        voiceRecognition = null;
+      }
+      if (voiceAnimFrameId) {
+        cancelAnimationFrame(voiceAnimFrameId);
+        voiceAnimFrameId = null;
+      }
+      if (voiceMicrophoneStream) {
+        voiceMicrophoneStream.getTracks().forEach(track => track.stop());
+        voiceMicrophoneStream = null;
+      }
+      if (voiceAudioCtx && voiceAudioCtx.state !== 'closed') {
+        try { voiceAudioCtx.close(); } catch(e) {}
+        voiceAudioCtx = null;
+      }
+      if (window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+      }
+      isSpeakingAssistant = false;
+      setVoiceState('IDLE');
+    }
+
+    async function handleUserVoiceUtterance(transcript) {
+      if (!transcript || !isVoiceCallActive) return;
+
+      const clean = transcript.toLowerCase().trim().replace(/[.!?]/g, '');
+      if (clean === 'stop' || clean === 'freeze' || clean === 'cancel') {
+        triggerBargeIn();
+        updateVoiceCaption("Call stopped.", 'assistant');
+        fetch('/api/voice/control', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'barge_in' })
+        }).catch(() => {});
+        return;
+      }
+      if (clean === 'mute') {
+        toggleVoiceMute(true);
+        return;
+      }
+
+      setVoiceState('THINKING');
+
+      const session = getActiveSession();
+      if (session) {
+        session.messages.push({ role: 'user', content: transcript });
+        if (session.messages.length === 1) {
+          session.title = transcript.length > 32 ? transcript.slice(0, 32) + '...' : transcript;
+          renderHistoryList();
+        }
+        appendMessageTurn('user', transcript);
+        saveSessions();
+      }
+
+      try {
+        const historyPayload = session ? session.messages.slice(-6) : [];
+        const res = await fetch('/api/voice', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ transcript, history: historyPayload })
+        });
+        const data = await res.json();
+
+        if (data.type === 'control_fast_path') {
+          updateVoiceCaption(data.spoken_summary, 'assistant');
+          setVoiceState('LISTENING');
+          return;
+        }
+
+        const displayText = data.display_text || data.spoken_text || 'Understood.';
+        const spokenText = data.spoken_text || displayText;
+
+        if (session) {
+          session.messages.push({ role: 'bot', content: displayText });
+          appendMessageTurn('bot', displayText, {
+            speed: data.latency_ms ? (spokenText.length / Math.max(0.1, data.latency_ms / 1000)).toFixed(1) : '-',
+            token_count: spokenText.split(' ').length,
+            duration: data.latency_ms ? (data.latency_ms / 1000).toFixed(2) : '-'
+          });
+          saveSessions();
+        }
+
+        updateVoiceCaption(spokenText, 'assistant');
+        speakAssistantResponse(spokenText);
+      } catch (err) {
+        console.error('Voice utterance dispatch failed:', err);
+        updateVoiceCaption("Connection error communicating with voice server.", 'assistant');
+        setVoiceState('LISTENING');
+      }
+    }
+
+    function speakAssistantResponse(text) {
+      if (!window.speechSynthesis || !isVoiceCallActive) {
+        setVoiceState('LISTENING');
+        return;
+      }
+
+      window.speechSynthesis.cancel();
+      isSpeakingAssistant = true;
+      setVoiceState('SPEAKING');
+
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.rate = 1.05;
+      utterance.pitch = 1.0;
+
+      const voices = window.speechSynthesis.getVoices();
+      const preferred = voices.find(v => v.lang.startsWith('en') && (v.name.includes('Natural') || v.name.includes('Google') || v.name.includes('Samantha')));
+      if (preferred) utterance.voice = preferred;
+
+      utterance.onend = () => {
+        isSpeakingAssistant = false;
+        if (isVoiceCallActive) {
+          setVoiceState('LISTENING');
+        }
+      };
+
+      utterance.onerror = () => {
+        isSpeakingAssistant = false;
+        if (isVoiceCallActive) {
+          setVoiceState('LISTENING');
+        }
+      };
+
+      currentUtterance = utterance;
+      window.speechSynthesis.speak(utterance);
+    }
+
+    function triggerBargeIn() {
+      if (window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+      }
+      isSpeakingAssistant = false;
+      fetch('/api/voice/control', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'barge_in' })
+      }).catch(() => {});
+      setVoiceState('LISTENING', 'Interrupted & Listening');
+    }
+
+    function toggleVoiceMute(forceState = null) {
+      isVoiceMuted = forceState !== null ? forceState : !isVoiceMuted;
+      const muteBtn = document.getElementById('voice-mute-btn');
+      const muteText = document.getElementById('voice-mute-text');
+      const muteIcon = document.getElementById('voice-mute-icon');
+
+      if (isVoiceMuted) {
+        if (muteBtn) muteBtn.classList.add('active-muted');
+        if (muteText) muteText.innerText = 'Unmute';
+        if (muteIcon) {
+          muteIcon.innerHTML = `
+            <line x1="1" y1="1" x2="23" y2="23"></line>
+            <path d="M9 9v3a3 3 0 0 0 5.12 2.12M15 9.34V5a3 3 0 0 0-5.94-.6"></path>
+            <path d="M17 16.95A7 7 0 0 1 5 12v-2m14 0v2a7 7 0 0 1-.11 1.23"></path>
+            <line x1="12" y1="19" x2="12" y2="22"></line>
+          `;
+        }
+        setVoiceState('IDLE');
+      } else {
+        if (muteBtn) muteBtn.classList.remove('active-muted');
+        if (muteText) muteText.innerText = 'Mute';
+        if (muteIcon) {
+          muteIcon.innerHTML = `
+            <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path>
+            <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+            <line x1="12" y1="19" x2="12" y2="22"></line>
+          `;
+        }
+        setVoiceState('LISTENING');
+      }
+
+      fetch('/api/voice/control', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'mute', muted: isVoiceMuted })
+      }).catch(() => {});
+    }
+
+    function handleVoiceOrbClick() {
+      if (isSpeakingAssistant) {
+        triggerBargeIn();
+      } else if (isVoiceMuted) {
+        toggleVoiceMute(false);
+      }
+    }
+
+    // Keyboard shortcuts inside voice call mode
+    window.addEventListener('keydown', (e) => {
+      if (!isVoiceCallActive) return;
+      if (e.key === 'Escape') {
+        closeVoiceCallModal();
+      } else if (e.key === ' ' && isSpeakingAssistant) {
+        e.preventDefault();
+        triggerBargeIn();
+      } else if (e.key.toLowerCase() === 'm' && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+        toggleVoiceMute();
+      }
+    });
 
     // Boot
     window.addEventListener('DOMContentLoaded', () => {

@@ -33,6 +33,10 @@ verification_engine = get_verification_engine()
 script_engine = get_script_engine()
 desktop_agent = get_desktop_agent()
 
+# Voice Pipeline (Section 6A)
+from agent.voice.pipeline import VoicePipeline
+voice_pipeline = VoicePipeline()
+
 
 def load_model_worker():
     try:
@@ -470,6 +474,64 @@ def manage_config():
         "chunk_size": config.CHUNK_SIZE,
         "chunk_overlap": config.CHUNK_OVERLAP,
     })
+
+
+@app.route("/api/voice", methods=["POST"])
+def voice_utterance():
+    """Real-time voice turn endpoint bridging browser and VoicePipeline."""
+    data = request.get_json() or {}
+    transcript = data.get("transcript", "").strip()
+    history = data.get("history", [])
+
+    if not transcript:
+        return jsonify({"error": "Transcript cannot be empty"}), 400
+
+    def llm_gen(user_query: str) -> str:
+        if not engine.is_loaded:
+            return "I am running locally, but the model weights are currently loading. Please give me a moment."
+        try:
+            voice_system_prompt = (
+                "You are Claude participating in a real-time voice call. "
+                "Keep responses concise, natural, and conversational (1 to 3 sentences max). "
+                "Do not use markdown formatting, code fences, or bullet lists."
+            )
+            res = engine.generate_answer(
+                question=user_query,
+                history=history[-4:] if history else None,
+                system_prompt=voice_system_prompt,
+                max_tokens=256,
+                temperature=0.7,
+            )
+            return res.get("reply", "I heard you.")
+        except Exception as e:
+            logger.error(f"Voice LLM generation error: {e}", exc_info=True)
+            return f"I encountered an issue generating a response: {e}"
+
+    result = voice_pipeline.process_user_utterance(transcript, llm_generate_fn=llm_gen)
+    return jsonify(result)
+
+
+@app.route("/api/voice/control", methods=["POST"])
+def voice_control():
+    """Control fast-path and state toggles for voice session."""
+    data = request.get_json() or {}
+    action = data.get("action", "").lower().strip()
+
+    if action == "barge_in":
+        latency_ms = voice_pipeline.handle_barge_in()
+        return jsonify({"status": "ok", "action": "barge_in", "latency_ms": latency_ms})
+    elif action == "mute":
+        muted = bool(data.get("muted", True))
+        voice_pipeline.set_mute(muted)
+        return jsonify({"status": "ok", "action": "mute", "is_muted": muted})
+    elif action == "status":
+        return jsonify({
+            "status": "ok",
+            "state": voice_pipeline.state.value,
+            "is_muted": voice_pipeline.is_muted,
+            "history_len": len(voice_pipeline.conversation_history),
+        })
+    return jsonify({"error": f"Unknown action: {action}"}), 400
 
 
 @app.route("/")
