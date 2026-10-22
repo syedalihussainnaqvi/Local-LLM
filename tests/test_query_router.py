@@ -57,7 +57,8 @@ class TestQueryRouter(unittest.TestCase):
         self.assertEqual(res["route"], "llm_only")
 
     def test_question_automatic_web_scraping(self):
-        prompt = "Explain how quantum computers use qubits for computation."
+        # An explicit web-search phrase triggers live_web when web_access_enabled=True
+        prompt = "Search online for the latest research on quantum computing qubits."
         res = self.router.route_query(prompt, user_override_mode="auto", web_access_enabled=True)
         self.assertEqual(res["route"], "live_web")
 
