@@ -1,0 +1,1 @@
+{"timestamp": 1792674976.9150636, "session_id": "default", "cwd": "C:\\Users\\Jahan\\Downloads\\chat_model_final_adapter", "command": "python -c \"print('TRUSTED_LOG_ENTRY')\"", "tier": "T2_ELEVATED", "exit_code": 0, "duration": 0.391, "is_trusted_session": false}
