@@ -118,18 +118,15 @@ def cmd_terminal(args):
 
 
 def cmd_call(args):
-    print("=" * 60)
-    print("ANTIGRAVITY REAL-TIME VOICE CALL MODE (Section 6A)")
-    print("Status: Connected. Local microphone active.")
-    print("Push-to-talk / Hands-free call active. Say 'Stop' to interrupt.")
-    print("=" * 60)
     pipeline = VoicePipeline()
-    print("[Voice] Ready for spoken input. (Simulating verified call turn):")
-    res = pipeline.process_user_utterance("What is the latest status of our autonomous agent?")
-    print(f"  [Display Channel]: {res['display_text']}")
-    print(f"  [Spoken Audio Channel]: {res['spoken_text']}")
-    print(f"  [Latency]: {res['latency_ms']} ms")
-    print("=" * 60)
+    pipeline.run_live_call_session()
+
+
+def cmd_voice_doctor(args):
+    from agent.voice.doctor import VoiceDoctor
+    doc = VoiceDoctor(record_seconds=2.0, enable_playback=True)
+    success = doc.run_all()
+    sys.exit(0 if success else 1)
 
 
 def cmd_trusted_session(args):
@@ -168,8 +165,12 @@ def main():
     p_purge.set_defaults(func=cmd_purge)
 
     # call
-    p_call = subparsers.add_parser("call", help="Launch voice call mode")
+    p_call = subparsers.add_parser("call", help="Launch real-time voice call mode")
     p_call.set_defaults(func=cmd_call)
+
+    # voice-doctor
+    p_doc = subparsers.add_parser("voice-doctor", help="Run stage-by-stage voice pipeline health probe")
+    p_doc.set_defaults(func=cmd_voice_doctor)
 
     # terminal
     p_term = subparsers.add_parser("terminal", help="Execute policy-governed terminal command")

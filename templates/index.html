@@ -2650,6 +2650,14 @@
       <div class="voice-subtitle-card">
         <div class="voice-live-caption" id="voice-live-caption">Say something to start speaking...</div>
       </div>
+
+      <!-- Direct Push / Fallback Voice Input (Section 5.3.d) -->
+      <div class="voice-fallback-bar" id="voice-fallback-bar" style="display: flex; gap: 8px; width: 100%;">
+        <input type="text" id="voice-fallback-input" class="voice-fallback-input" placeholder="Type here or speak to the agent..." onkeydown="if(event.key==='Enter') submitVoiceFallbackText()" style="flex: 1; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); border-radius: 20px; padding: 10px 16px; color: #fff; font-size: 14px; outline: none;">
+        <button type="button" onclick="submitVoiceFallbackText()" class="voice-icon-btn" style="width: 38px; height: 38px; border-radius: 50%;" title="Send spoken turn">
+          <svg class="icon" viewBox="0 0 24 24" style="stroke: #fff; width: 16px; height: 16px;"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+        </button>
+      </div>
     </div>
 
     <!-- Bottom Bar: Controls -->
@@ -4223,8 +4231,17 @@
         voiceRecognition.onerror = (event) => {
           console.warn('Voice recognition error:', event.error);
           if (event.error === 'not-allowed') {
-            updateVoiceCaption("Microphone access denied. Please grant microphone permissions.", 'assistant');
+            updateVoiceCaption("⚠️ Microphone access blocked. Please allow microphone permissions in Windows and browser settings.", 'assistant');
             setVoiceState('IDLE', 'Mic Denied');
+          } else if (event.error === 'network') {
+            updateVoiceCaption("ℹ️ Offline mode: browser speech cloud unreachable. Type above or speak into terminal.", 'assistant');
+            setVoiceState('IDLE', 'Offline');
+          } else if (event.error === 'no-speech') {
+            updateVoiceCaption("No speech detected. Listening...", 'assistant');
+            setVoiceState('LISTENING');
+          } else {
+            updateVoiceCaption(`Notice: ${event.error}. Say something or type above.`, 'assistant');
+            setVoiceState('LISTENING');
           }
         };
 
@@ -4237,7 +4254,19 @@
         voiceRecognition.start();
       } catch (err) {
         console.error('Failed to start voice recognition:', err);
+        updateVoiceCaption("Voice recognition could not start. You can type below.", 'assistant');
+        setVoiceState('IDLE', 'Speech Error');
       }
+    }
+
+    function submitVoiceFallbackText() {
+      const input = document.getElementById('voice-fallback-input');
+      if (!input) return;
+      const val = input.value.trim();
+      if (!val) return;
+      input.value = '';
+      updateVoiceCaption(val, 'user');
+      handleUserVoiceUtterance(val);
     }
 
     function stopVoiceSession() {
