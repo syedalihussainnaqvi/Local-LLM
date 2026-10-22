@@ -67,24 +67,21 @@ class DesktopStateDetector:
     def is_session_locked() -> bool:
         """Check if current Windows session is locked or on secure desktop."""
         user32 = ctypes.windll.user32
-        # Check desktop access
+        # Check desktop access: OpenInputDesktop fails (returns 0) when workstation is locked or on secure UAC desktop
         hdesk = user32.OpenInputDesktop(0, False, 0x0100)  # DESKTOP_SWITCHDESKTOP
         if hdesk == 0:
             return True
         user32.CloseDesktop(hdesk)
 
-        # Check foreground window handle
+        # If a foreground window exists, inspect its title for lock screen
         hwnd = user32.GetForegroundWindow()
-        if hwnd == 0:
-            return True
-
-        # Check window title for lock screen
-        length = user32.GetWindowTextLengthW(hwnd)
-        if length > 0:
-            buff = ctypes.create_unicode_buffer(length + 1)
-            user32.GetWindowTextW(hwnd, buff, length + 1)
-            if "windows default lock screen" in buff.value.lower():
-                return True
+        if hwnd != 0:
+            length = user32.GetWindowTextLengthW(hwnd)
+            if length > 0:
+                buff = ctypes.create_unicode_buffer(length + 1)
+                user32.GetWindowTextW(hwnd, buff, length + 1)
+                if "windows default lock screen" in buff.value.lower():
+                    return True
 
         return False
 
