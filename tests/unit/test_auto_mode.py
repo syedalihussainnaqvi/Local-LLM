@@ -14,10 +14,10 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from agent.policy.gateway import PolicyGateway
-from agent.core.wal import WALManager
-from agent.core.execution_engine import ExecutionEngine
-from agent.core.auto_mode import AutoController, AutoLimits, AutoStopReason
+from local_llm.agent.policy.gateway import PolicyGateway
+from local_llm.agent.core.wal import WALManager
+from local_llm.agent.core.execution_engine import ExecutionEngine
+from local_llm.agent.core.auto_mode import AutoController, AutoLimits, AutoStopReason
 
 
 class TestAutoMode(unittest.TestCase):

@@ -3,7 +3,7 @@
 import unittest
 from unittest.mock import MagicMock, patch
 
-from web_scraper import SafeWebScraper, SecurityException, is_ip_blocked, validate_url_safety
+from local_llm.web_scraper import SafeWebScraper, SecurityException, is_ip_blocked, validate_url_safety
 import ipaddress
 
 
@@ -84,7 +84,7 @@ class TestWebScraper(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.scraper.extract_content(html, "https://example.com/empty")
 
-    @patch("web_scraper.validate_url_safety")
+    @patch("local_llm.web_scraper.validate_url_safety")
     def test_unsafe_redirect_blocking(self, mock_safety):
         # Mock first request returns redirect to private IP
         mock_safety.side_effect = [
@@ -104,7 +104,7 @@ class TestWebScraper(unittest.TestCase):
 
     def test_oversized_response_handling(self):
         scraper_small = SafeWebScraper(max_size=50)
-        with patch("web_scraper.validate_url_safety", return_value=(True, "")):
+        with patch("local_llm.web_scraper.validate_url_safety", return_value=(True, "")):
             with patch("requests.Session.get") as mock_get:
                 mock_resp = MagicMock()
                 mock_resp.status_code = 200

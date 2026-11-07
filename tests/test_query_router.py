@@ -4,9 +4,9 @@ import os
 import tempfile
 import unittest
 
-from query_router import QueryRouter
-from retrieval import HybridRetriever
-from storage import StorageManager
+from local_llm.query_router import QueryRouter
+from local_llm.retrieval import HybridRetriever
+from local_llm.storage import StorageManager
 
 
 class TestQueryRouter(unittest.TestCase):

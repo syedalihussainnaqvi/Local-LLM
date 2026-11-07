@@ -77,18 +77,35 @@ The system allows the model to retrieve information from websites, store and ind
 ```
 
 ### Core Components:
-- **`config.py`**: Centralized configuration management with `.env` override support and safe defaults.
-- **`web_scraper.py`**: SSRF-protected web fetcher with redirect re-validation, response size caps, robots.txt support, and semantic HTML extraction.
-- **`text_processor.py`**: Whitespace normalizer and sentence-boundary-aware chunker with metadata tracking (source URL, title, section, hash).
-- **`storage.py`**: Persistent, transactional SQLite storage (`data/rag_storage.db`) supporting incremental updates, versioning, cascading deletions, and audit crawl history.
-- **`embeddings.py`**: Local, CPU-efficient hashing embedder producing normalized dense vectors without external downloads.
-- **`retrieval.py`**: Hybrid BM25 lexical + dense cosine retriever with threshold filtering and prompt context formatting.
-- **`query_router.py`**: Intent analyzer routing queries between `llm_only`, `local_rag`, `live_web`, and `direct_url`.
-- **`web_discovery.py`**: Discovery engine supporting DuckDuckGo, Brave Search API, and mock offline testing.
-- **`rag_pipeline.py`**: End-to-end orchestrator connecting routing, scraping, storage, retrieval, and grounding instructions.
-- **`llm_engine.py`**: Persistent, thread-safe inference manager for the Qwen2.5-1.5B base model and LoRA adapter.
-- **`app.py` & `templates/index.html`**: Web UI with dark/light themes, live token streaming, Knowledge Base modal, and citation cards.
-- **`cli_chat.py`**: Interactive console interface supporting `/scrape`, `/sources`, `/refresh`, `/delete`, `/mode`, and `/web`.
+- **`src/local_llm/config.py`**: Centralized configuration management with safe defaults.
+- **`src/local_llm/web_scraper.py`**: SSRF-protected web fetcher with redirect re-validation, response size caps, robots.txt support, and semantic HTML extraction.
+- **`src/local_llm/text_processor.py`**: Whitespace normalizer and sentence-boundary-aware chunker with metadata tracking (source URL, title, section, hash).
+- **`src/local_llm/storage.py`**: Persistent, transactional SQLite storage (`data/rag_storage.db`) supporting incremental updates, versioning, cascading deletions, and audit crawl history.
+- **`src/local_llm/embeddings.py`**: Local, CPU-efficient hashing embedder producing normalized dense vectors without external downloads.
+- **`src/local_llm/retrieval.py`**: Hybrid BM25 lexical + dense cosine retriever with threshold filtering and prompt context formatting.
+- **`src/local_llm/query_router.py`**: Intent analyzer routing queries between `llm_only`, `local_rag`, `live_web`, and `direct_url`.
+- **`src/local_llm/web_discovery.py`**: Discovery engine supporting DuckDuckGo, Brave Search API, and mock offline testing.
+- **`src/local_llm/rag_pipeline.py`**: End-to-end orchestrator connecting routing, scraping, storage, retrieval, and grounding instructions.
+- **`src/local_llm/llm_engine.py`**: Persistent, thread-safe inference manager for the Qwen2.5-1.5B base model and LoRA adapter.
+- **`src/local_llm/app.py` & `src/local_llm/templates/index.html`**: Web UI with dark/light themes, live token streaming, Knowledge Base modal, and citation cards.
+- **`src/local_llm/cli_chat.py`**: Interactive console interface supporting `/scrape`, `/sources`, `/refresh`, `/delete`, `/mode`, and `/web`.
+
+## Project Layout
+
+```text
+src/local_llm/       Application package and agent integrations
+  agent/             Agent core, tools, policy, and voice
+  templates/         Web UI templates
+models/adapter/      Fine-tuned adapter and tokenizer files
+tests/               Automated tests
+eval/                Evaluation code and fixtures
+docs/                Architecture, security, testing, and operation guides
+scripts/model/       Model download and load-test utilities
+dev/scratch/         Experimental/manual development scripts
+data/                Runtime database and local application data
+```
+
+The root `app.py`, `cli_chat.py`, and `agent_cli.py` files are small compatibility launchers. New application code belongs in `src/local_llm/`.
 
 ---
 
@@ -130,7 +147,7 @@ The system allows the model to retrieve information from websites, store and ind
 
 ## 4. How to Configure the Existing LLM
 
-The project uses the fine-tuned LoRA adapter files in the root folder (`adapter_model.safetensors`, `adapter_config.json`, tokenizer configs).
+The fine-tuned LoRA adapter and tokenizer files are stored in `models/adapter/` (`adapter_model.safetensors`, `adapter_config.json`, and tokenizer configs).
 The base model `Qwen/Qwen2.5-1.5B-Instruct` is automatically loaded from HuggingFace cache or downloaded on first run.
 
 If you wish to change base weights or directory paths, configure `.env`:
@@ -198,7 +215,7 @@ When the system routes a query to local RAG, live web, or a direct URL:
 
 ## 7. Knowledge Base & Incremental Updates
 
-The local storage layer (`storage.py`) uses SQLite with SHA-256 content hashing:
+The local storage layer (`src/local_llm/storage.py`) uses SQLite with SHA-256 content hashing:
 - **Incremental Refresh**: When refreshing existing sources, if a page's content hash has not changed, re-chunking is skipped, saving compute and memory.
 - **Version Tracking**: When content changes, the document version is incremented, and chunks are atomically updated within a transaction.
 - **Fail-Safe Updates**: If a website is temporarily down during a refresh, previously valid content is preserved and an error record is logged.
@@ -207,7 +224,7 @@ The local storage layer (`storage.py`) uses SQLite with SHA-256 content hashing:
 
 ## 8. Web Scraping Safety & Security Controls
 
-Before fetching any URL, `web_scraper.py` validates:
+Before fetching any URL, `src/local_llm/web_scraper.py` validates:
 - **Allowed Schemes**: Only `http://` and `https://`.
 - **SSRF & Private IP Protection**: Blocks requests to loopback (`127.0.0.1`, `::1`), private subnets (`10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`), link-local (`169.254.0.0/16`), multicast, and cloud metadata (`169.254.169.254`, `metadata.google.internal`).
 - **Safe Redirects**: Disables automatic HTTP redirects and re-validates every redirect destination against DNS rebinding.
@@ -218,9 +235,9 @@ Before fetching any URL, `web_scraper.py` validates:
 
 ## 9. Running the Automated Test Suite
 
-Run the full automated test suite containing 29 test cases:
+Run the automated test suite:
 ```powershell
-python -m unittest discover -s tests -v
+python -m pytest tests -v
 ```
 
 Test coverage includes:

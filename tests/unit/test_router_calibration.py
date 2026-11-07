@@ -15,7 +15,7 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from agent.core.router import MultiLayerRouter, RouteClass
+from local_llm.agent.core.router import MultiLayerRouter, RouteClass
 
 
 def wilson_score_interval(successes: int, total: int, confidence: float = 0.95) -> tuple[float, float]:

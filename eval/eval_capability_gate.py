@@ -17,6 +17,9 @@ import torch
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, PROJECT_ROOT)
+SOURCE_ROOT = os.path.join(PROJECT_ROOT, "src")
+if SOURCE_ROOT not in sys.path:
+    sys.path.insert(0, SOURCE_ROOT)
 
 def get_process_ram_mb():
     p = psutil.Process()
@@ -33,7 +36,7 @@ def benchmark():
     
     # 2. Model & Tokenizer Load
     t0 = time.time()
-    from llm_engine import LLMEngine
+    from local_llm.llm_engine import LLMEngine
     engine = LLMEngine()
     print("Loading model and LoRA adapter...")
     engine.load_model()

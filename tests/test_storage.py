@@ -4,7 +4,7 @@ import os
 import tempfile
 import unittest
 
-from storage import StorageManager
+from local_llm.storage import StorageManager
 
 
 class TestStorage(unittest.TestCase):

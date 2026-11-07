@@ -16,14 +16,14 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from agent.voice.audio_engine import WindowsTTS, WindowsSTT, EnergyVAD, AudioDeviceManager
-from agent.voice.pipeline import (
+from local_llm.agent.voice.audio_engine import WindowsTTS, WindowsSTT, EnergyVAD, AudioDeviceManager
+from local_llm.agent.voice.pipeline import (
     VoicePipeline,
     VoiceTurnState,
     SpeechNormalizer,
     VoiceControlFastPath,
 )
-from agent.voice.doctor import VoiceDoctor
+from local_llm.agent.voice.doctor import VoiceDoctor
 
 
 class TestVoiceBugFix(unittest.TestCase):

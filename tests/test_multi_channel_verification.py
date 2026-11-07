@@ -6,7 +6,7 @@ passes without an internet connection (H-4: no implicit live dependencies in CI)
 
 import unittest
 from unittest.mock import patch, MagicMock
-from web_discovery import is_news_query, is_sports_query, CompositeAuthenticProvider, TOP_NEWS_CHANNELS, TOP_SPORTS_CHANNELS
+from local_llm.web_discovery import is_news_query, is_sports_query, CompositeAuthenticProvider, TOP_NEWS_CHANNELS, TOP_SPORTS_CHANNELS
 
 
 class TestMultiChannelVerification(unittest.TestCase):
@@ -31,8 +31,8 @@ class TestMultiChannelVerification(unittest.TestCase):
         self.assertIn("Sky Sports", TOP_SPORTS_CHANNELS)
         self.assertIn("Cricinfo", TOP_SPORTS_CHANNELS)
 
-    @patch("web_discovery.DuckDuckGoLiteProvider.search", return_value=[])
-    @patch("web_discovery.GoogleNewsRssProvider.search_items")
+    @patch("local_llm.web_discovery.DuckDuckGoLiteProvider.search", return_value=[])
+    @patch("local_llm.web_discovery.GoogleNewsRssProvider.search_items")
     def test_news_search_groups_distinct_channels(self, mock_items, _mock_ddg):
         """Offline: patch RSS feed; verify category tagging and dedup logic.
         Provides 5 distinct-channel items so the provider's early-return fires
@@ -52,8 +52,8 @@ class TestMultiChannelVerification(unittest.TestCase):
             self.assertIn("category", r)
             self.assertEqual(r["category"], "news")
 
-    @patch("web_discovery.DuckDuckGoLiteProvider.search", return_value=[])
-    @patch("web_discovery.GoogleNewsRssProvider.search_items")
+    @patch("local_llm.web_discovery.DuckDuckGoLiteProvider.search", return_value=[])
+    @patch("local_llm.web_discovery.GoogleNewsRssProvider.search_items")
     def test_sports_search_groups_distinct_channels(self, mock_items, _mock_ddg):
         """Offline: patch RSS feed with 5 distinct-channel sports fixture items."""
         mock_items.return_value = [
@@ -70,8 +70,8 @@ class TestMultiChannelVerification(unittest.TestCase):
             self.assertIn("category", r)
             self.assertEqual(r["category"], "sports")
 
-    @patch("web_discovery.DuckDuckGoLiteProvider.search")
-    @patch("web_discovery.WikipediaProvider.search")
+    @patch("local_llm.web_discovery.DuckDuckGoLiteProvider.search")
+    @patch("local_llm.web_discovery.WikipediaProvider.search")
     def test_general_research_routing(self, mock_wiki, mock_ddg):
         """Offline: patch DDG + Wikipedia; verify composite result merging."""
         mock_ddg.return_value = [
@@ -85,7 +85,7 @@ class TestMultiChannelVerification(unittest.TestCase):
         self.assertGreaterEqual(len(results), 1)
 
     def test_keyword_research_query_detection(self):
-        from web_discovery import is_keyword_research_query, extract_target_keyword
+        from local_llm.web_discovery import is_keyword_research_query, extract_target_keyword
         self.assertTrue(is_keyword_research_query("find from the google or any keyword search tool the search volume and KD of the produces and reviews"))
         self.assertTrue(is_keyword_research_query("search volume of iphone 16"))
         self.assertTrue(is_keyword_research_query("what is the keyword difficulty of python"))
@@ -94,7 +94,7 @@ class TestMultiChannelVerification(unittest.TestCase):
 
     def test_keyword_research_provider(self):
         """Offline: keyword research provider returns deterministic synthetic data (no HTTP)."""
-        from web_discovery import CompositeAuthenticProvider
+        from local_llm.web_discovery import CompositeAuthenticProvider
         provider = CompositeAuthenticProvider()
         # GoogleKeywordMetricsProvider generates synthetic results without network calls
         results = provider.search("find search volume and KD of the produces and reviews", max_results=3)

@@ -19,8 +19,8 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from agent.policy.gateway import PolicyGateway, RiskTier, InputProvenance
-from agent.tools.terminal import TerminalSubsystem, TerminalCommandResult
+from local_llm.agent.policy.gateway import PolicyGateway, RiskTier, InputProvenance
+from local_llm.agent.tools.terminal import TerminalSubsystem, TerminalCommandResult
 
 
 class TestTerminalSubsystem(unittest.TestCase):

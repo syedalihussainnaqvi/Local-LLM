@@ -5,11 +5,11 @@ import tempfile
 import unittest
 from unittest.mock import MagicMock, patch
 
-from rag_pipeline import GROUNDED_SYSTEM_PROMPT, RagPipeline
-from retrieval import HybridRetriever, format_context_for_prompt
-from storage import StorageManager
-from web_discovery import MockSearchProvider, WebDiscoveryEngine
-from web_scraper import SafeWebScraper
+from local_llm.rag_pipeline import GROUNDED_SYSTEM_PROMPT, RagPipeline
+from local_llm.retrieval import HybridRetriever, format_context_for_prompt
+from local_llm.storage import StorageManager
+from local_llm.web_discovery import MockSearchProvider, WebDiscoveryEngine
+from local_llm.web_scraper import SafeWebScraper
 
 
 class TestLLMIntegration(unittest.TestCase):

@@ -5,9 +5,9 @@ import tempfile
 import unittest
 import numpy as np
 
-from embeddings import LocalTextEmbedder
-from retrieval import HybridRetriever, format_context_for_prompt
-from storage import StorageManager
+from local_llm.embeddings import LocalTextEmbedder
+from local_llm.retrieval import HybridRetriever, format_context_for_prompt
+from local_llm.storage import StorageManager
 
 
 class TestRetrieval(unittest.TestCase):

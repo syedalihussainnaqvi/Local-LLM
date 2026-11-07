@@ -17,7 +17,7 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from fast_visual_notes import (
+from local_llm.fast_visual_notes import (
     ALLOWED_ICONS,
     FAST_VISUAL_PREFILL,
     FAST_VISUAL_SUFFIX,
@@ -146,7 +146,7 @@ class TestFastVisualNotes(unittest.TestCase):
         self.assertIn("Submit and show all results", html)
 
     def test_flask_presets_and_render_routes(self):
-        from app import app
+        from local_llm.app import app
         client = app.test_client()
 
         # 1. /api/presets must include fast_visual

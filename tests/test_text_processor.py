@@ -1,7 +1,7 @@
 """Tests for TextProcessor and sentence-boundary chunking."""
 
 import unittest
-from text_processor import TextProcessor, process_and_chunk
+from local_llm.text_processor import TextProcessor, process_and_chunk
 
 
 class TestTextProcessor(unittest.TestCase):

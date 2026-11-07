@@ -19,12 +19,15 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
+SOURCE_ROOT = PROJECT_ROOT / "src"
+if str(SOURCE_ROOT) not in sys.path:
+    sys.path.insert(0, str(SOURCE_ROOT))
 
-from agent.policy.gateway import PolicyGateway, RiskTier, InputProvenance
-from agent.core.wal import WALManager, StepIdempotency, StepState
-from agent.core.input_broker import InputBroker
-from agent.supervisor.watchdog import ProcessSupervisor
-from agent.tools.file_ops import FileOpsTool
+from local_llm.agent.policy.gateway import PolicyGateway, RiskTier, InputProvenance
+from local_llm.agent.core.wal import WALManager, StepIdempotency, StepState
+from local_llm.agent.core.input_broker import InputBroker
+from local_llm.agent.supervisor.watchdog import ProcessSupervisor
+from local_llm.agent.tools.file_ops import FileOpsTool
 
 
 class TestWalkingSkeleton(unittest.TestCase):
