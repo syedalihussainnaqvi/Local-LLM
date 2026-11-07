@@ -630,7 +630,6 @@ class RagPipeline:
             yield {
                 "type": "status",
                 "action": "llm_only",
-                "message": "Generating direct answer with fine-tuned local LLM...",
             }
 
         # Build context if chunks were found

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Ollama &bull; Qwen 2.5 LoRA</title>
+  <title>Local LLM</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -14,6 +14,9 @@
   
   <!-- Marked for Markdown rendering -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.2/marked.min.js"></script>
+
+  <!-- Mermaid for interactive diagrams -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.9.1/mermaid.min.js"></script>
 
   <style>
     /* ── Dark theme (default) ── */
@@ -797,6 +800,129 @@
       line-height: 1.5;
     }
 
+    /* ── Rich-Response Interactive Elements (Mermaid, Quizzes, SVG) ── */
+    .mermaid-container {
+      margin: 16px 0;
+      padding: 16px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 10px;
+      overflow-x: auto;
+      display: flex;
+      justify-content: center;
+      transition: border-color 0.2s ease;
+    }
+
+    .mermaid-container:hover {
+      border-color: var(--border-focus);
+    }
+
+    .mermaid svg {
+      max-width: 100%;
+      height: auto;
+    }
+
+    .rich-preview-card {
+      margin: 16px 0;
+      border: 1px solid var(--border-subtle);
+      border-radius: 10px;
+      overflow: hidden;
+      background: var(--bg-card);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+    }
+
+    .rich-preview-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 14px;
+      background: var(--code-header-bg);
+      border-bottom: 1px solid var(--border-subtle);
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-muted);
+    }
+
+    .rich-preview-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-weight: 600;
+      color: var(--text-main);
+    }
+
+    .rich-preview-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .rich-toggle-btn {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-muted);
+      border-radius: 5px;
+      padding: 3px 8px;
+      font-size: 11px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: all 0.15s;
+    }
+
+    .rich-toggle-btn:hover {
+      background: rgba(255, 255, 255, 0.12);
+      color: var(--text-main);
+    }
+
+    .rich-iframe-body {
+      width: 100%;
+      min-height: 280px;
+      border: none;
+      background: #ffffff;
+      display: block;
+    }
+
+    .rich-svg-display {
+      padding: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0, 0, 0, 0.2);
+      overflow-x: auto;
+    }
+
+    .rich-svg-display svg {
+      max-width: 100%;
+      height: auto;
+    }
+
+    .markdown-body details {
+      margin: 12px 0;
+      padding: 10px 14px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: border-color 0.2s;
+    }
+
+    .markdown-body details[open] {
+      border-color: rgba(99, 102, 241, 0.4);
+    }
+
+    .markdown-body summary {
+      font-weight: 600;
+      color: var(--text-main);
+      user-select: none;
+      outline: none;
+    }
+
+    .markdown-body details > *:not(summary) {
+      margin-top: 10px;
+    }
+
     /* Assistant Action Toolbar */
     .message-toolbar {
       display: flex;
@@ -958,311 +1084,567 @@
       text-align: center;
     }
 
-    /* ── ChatGPT-style Voice Call Button on Search/Input Bar ── */
+    /* ── Voice Call Button (toolbar) ── */
     .voice-call-btn {
       background: transparent;
       color: var(--text-muted);
       border: 1px solid transparent;
       margin-right: 2px;
     }
-
     .voice-call-btn:hover {
-      background: rgba(255, 255, 255, 0.08);
-      color: var(--text-main);
+      background: rgba(0,255,65,0.07);
+      color: #00ff41;
       transform: scale(1.06);
+      border-color: rgba(0,255,65,0.25);
     }
-
-    [data-theme="light"] .voice-call-btn:hover {
-      background: rgba(0, 0, 0, 0.06);
-      color: #111111;
-    }
-
     .voice-call-btn.active-pulse {
-      color: #10b981;
-      animation: voiceBtnGlow 1.6s infinite ease-in-out;
+      color: #00ff41;
+      animation: hackBtnPulse 1.4s infinite ease-in-out;
+    }
+    @keyframes hackBtnPulse {
+      0%,100% { box-shadow: 0 0 0 0 rgba(0,255,65,0.5); }
+      50%      { box-shadow: 0 0 0 7px rgba(0,255,65,0); }
     }
 
-    @keyframes voiceBtnGlow {
-      0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.5); }
-      70% { box-shadow: 0 0 0 8px rgba(16, 185, 129, 0); }
-      100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
-    }
+    /* ═══════════════════════════════════════════════════
+       HACKER TERMINAL VOICE MODAL
+    ═══════════════════════════════════════════════════ */
+    @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
 
-    /* ── ChatGPT-style Full Voice Call Overlay ── */
     .voice-modal-overlay {
       position: fixed;
       inset: 0;
-      background: radial-gradient(circle at center, #181920 0%, #0c0d11 100%);
+      background: #000000;
       z-index: 10000;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      padding: 32px 24px;
-      backdrop-filter: blur(24px);
-      -webkit-backdrop-filter: blur(24px);
-      color: #ededed;
-      animation: voiceFadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      gap: 0;
+      color: #00ff41;
+      font-family: 'Share Tech Mono', 'Courier New', monospace;
+      overflow: hidden;
+      animation: hackFadeIn 0.2s ease;
+    }
+    /* CRT scanlines overlay */
+    .voice-modal-overlay::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0, 0, 0, 0.18) 2px,
+        rgba(0, 0, 0, 0.18) 4px
+      );
+      pointer-events: none;
+      z-index: 10001;
+    }
+    /* Phosphor screen vignette */
+    .voice-modal-overlay::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(ellipse at center, transparent 60%, rgba(0,0,0,0.55) 100%);
+      pointer-events: none;
+      z-index: 10001;
+    }
+    @keyframes hackFadeIn {
+      from { opacity: 0; filter: brightness(3) blur(4px); }
+      to   { opacity: 1; filter: brightness(1) blur(0); }
     }
 
-    @keyframes voiceFadeIn {
-      from { opacity: 0; transform: scale(0.98); }
-      to { opacity: 1; transform: scale(1); }
-    }
-
+    /* TOP BAR */
     .voice-modal-topbar {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      max-width: 900px;
-      width: 100%;
-      margin: 0 auto;
+      padding: 10px 20px 8px;
+      border-bottom: 1px solid #00ff41;
+      background: #000;
+      gap: 12px;
+      flex-wrap: wrap;
     }
-
     .voice-model-badge {
       display: flex;
       align-items: center;
       gap: 10px;
-      background: rgba(255, 255, 255, 0.06);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      padding: 6px 14px;
-      border-radius: 20px;
-      font-size: 12.5px;
-      font-weight: 600;
-      letter-spacing: 0.5px;
-      color: #e5e7eb;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      color: #00ff41;
+      text-transform: uppercase;
+      font-family: 'Share Tech Mono', monospace;
     }
-
     .voice-dot-live {
-      width: 8px;
-      height: 8px;
+      width: 8px; height: 8px;
       border-radius: 50%;
-      background: #10b981;
-      box-shadow: 0 0 8px #10b981;
-      animation: voiceLiveBlink 1.8s infinite;
+      background: #00ff41;
+      box-shadow: 0 0 8px #00ff41, 0 0 16px rgba(0,255,65,0.5);
+      animation: hackBlink 1s step-end infinite;
     }
-
-    @keyframes voiceLiveBlink {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.35; }
+    @keyframes hackBlink { 0%,100%{opacity:1} 50%{opacity:0} }
+    .voice-call-timer {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 12px;
+      color: #00b32c;
+      letter-spacing: 2px;
     }
-
     .voice-icon-btn {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      background: rgba(255, 255, 255, 0.08);
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      color: #ededed;
-      display: flex;
+      width: 28px; height: 28px;
+      border-radius: 2px;
+      background: transparent;
+      border: 1px solid #00ff41;
+      color: #00ff41;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      transition: all 0.15s;
+      font-family: monospace;
+    }
+    .voice-icon-btn:hover {
+      background: rgba(0,255,65,0.12);
+      box-shadow: 0 0 8px rgba(0,255,65,0.5);
+    }
+
+    /* OFFLINE / ONLINE MODE TOGGLE */
+    .voice-hacker-mode-toggle {
+      display: inline-flex;
       align-items: center;
-      justify-content: center;
+      gap: 7px;
+      background: rgba(0, 255, 65, 0.06);
+      border: 1px solid #00ff41;
+      color: #00ff41;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 1.5px;
+      padding: 4px 10px;
+      border-radius: 2px;
       cursor: pointer;
       transition: all 0.2s;
+      text-transform: uppercase;
+    }
+    .voice-hacker-mode-toggle:hover {
+      background: rgba(0, 255, 65, 0.16);
+      box-shadow: 0 0 10px rgba(0, 255, 65, 0.4);
+    }
+    .voice-hacker-mode-toggle.offline-active {
+      border-color: #00e5ff;
+      color: #00e5ff;
+      background: rgba(0, 229, 255, 0.08);
+      box-shadow: 0 0 10px rgba(0, 229, 255, 0.25);
     }
 
-    .voice-icon-btn:hover {
-      background: rgba(255, 255, 255, 0.16);
-      transform: scale(1.05);
-    }
-
+    /* CENTER SPLIT */
     .voice-center-stage {
+      display: grid;
+      grid-template-columns: 240px 1fr;
+      min-height: 0;
+      overflow: hidden;
+    }
+    @media (max-width: 760px) {
+      .voice-center-stage { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
+    }
+
+    /* LEFT: radar orb panel */
+    .voice-orb-panel {
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      flex: 1;
-      gap: 32px;
-      max-width: 600px;
-      margin: 0 auto;
-      text-align: center;
+      gap: 14px;
+      padding: 20px 16px;
+      border-right: 1px solid #003a0e;
+      background: #010e03;
+      position: relative;
+      overflow: hidden;
+    }
+    .voice-orb-panel::before {
+      content: '01 10 11 00 10 01 11 00\A01 11 00 10 01 11 00 10\A10 01 11 00 10 01 11 00';
+      white-space: pre;
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      font-family: monospace;
+      font-size: 9px;
+      color: rgba(0,255,65,0.06);
+      letter-spacing: 3px;
+      line-height: 14px;
+      pointer-events: none;
     }
 
-    /* ChatGPT Iconic Orb */
+    /* THE ORB — radar pulse */
     .voice-orb-container {
       position: relative;
-      width: 180px;
-      height: 180px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      width: 130px; height: 130px;
+      display: flex; align-items: center; justify-content: center;
       cursor: pointer;
-      user-select: none;
     }
-
     .voice-orb-glow {
       position: absolute;
-      inset: -20px;
-      border-radius: 50%;
-      background: radial-gradient(circle, rgba(56, 189, 248, 0.3) 0%, rgba(168, 85, 247, 0.15) 50%, transparent 70%);
-      filter: blur(24px);
-      transition: all 0.5s ease;
-      pointer-events: none;
+      inset: 0; border-radius: 50%;
+      background: radial-gradient(circle, rgba(0,255,65,0.15) 0%, transparent 70%);
+      filter: blur(12px);
     }
-
     .voice-orb-core {
       position: relative;
-      width: 130px;
-      height: 130px;
+      width: 100px; height: 100px;
       border-radius: 50%;
-      background: radial-gradient(circle at 35% 35%, #ffffff 0%, #60a5fa 35%, #8b5cf6 70%, #1e1b4b 100%);
-      box-shadow: 0 0 45px rgba(96, 165, 250, 0.5), inset 0 0 25px rgba(255, 255, 255, 0.6);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: transform 0.15s ease-out, box-shadow 0.3s ease;
-      animation: orbFloat 4s ease-in-out infinite;
+      border: 2px solid #00ff41;
+      box-shadow: 0 0 20px rgba(0,255,65,0.4), inset 0 0 20px rgba(0,255,65,0.08);
+      background: radial-gradient(circle at center, rgba(0,255,65,0.05) 0%, transparent 70%);
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.25s;
     }
-
-    @keyframes orbFloat {
-      0%, 100% { transform: translateY(0px) scale(1); }
-      50% { transform: translateY(-6px) scale(1.03); }
-    }
-
-    .voice-orb-container.state-listening .voice-orb-core {
-      background: radial-gradient(circle at 35% 35%, #ffffff 0%, #38bdf8 40%, #3b82f6 75%, #0f172a 100%);
-      box-shadow: 0 0 50px rgba(56, 189, 248, 0.6), inset 0 0 30px rgba(255, 255, 255, 0.7);
-    }
-
-    .voice-orb-container.state-thinking .voice-orb-core {
-      background: conic-gradient(from 0deg, #ec4899, #8b5cf6, #3b82f6, #ec4899);
-      box-shadow: 0 0 60px rgba(236, 72, 153, 0.65);
-      animation: orbSpin 2s linear infinite;
-    }
-
-    @keyframes orbSpin {
-      0% { transform: rotate(0deg) scale(1.02); }
-      100% { transform: rotate(360deg) scale(1.02); }
-    }
-
-    .voice-orb-container.state-speaking .voice-orb-core {
-      background: radial-gradient(circle at 35% 35%, #ffffff 0%, #34d399 35%, #059669 70%, #064e3b 100%);
-      box-shadow: 0 0 65px rgba(52, 211, 153, 0.75), inset 0 0 30px rgba(255, 255, 255, 0.7);
-      animation: orbSpeakingPulse 1.2s infinite ease-in-out;
-    }
-
-    @keyframes orbSpeakingPulse {
-      0%, 100% { transform: scale(1.08); }
-      50% { transform: scale(1.18); }
-    }
-
-    .voice-orb-container.state-muted .voice-orb-core {
-      background: radial-gradient(circle at 35% 35%, #9ca3af 0%, #4b5563 50%, #1f2937 100%);
-      box-shadow: 0 0 25px rgba(239, 68, 68, 0.4);
-      animation: none;
-      filter: grayscale(0.5);
-    }
-
-    .voice-orb-ring {
+    .voice-orb-core::before {
+      content: '';
       position: absolute;
-      border-radius: 50%;
-      border: 1.5px solid rgba(255, 255, 255, 0.2);
+      inset: 0; border-radius: 50%;
+      background: conic-gradient(from 0deg, transparent 0deg, rgba(0,255,65,0.35) 20deg, transparent 21deg);
+      animation: radarSweep 3s linear infinite;
+    }
+    .voice-orb-core::after {
+      content: '+';
+      font-size: 16px;
+      color: rgba(0,255,65,0.6);
+      font-family: monospace;
+      letter-spacing: -2px;
+      animation: cursorBlink 1s step-end infinite;
+    }
+    @keyframes radarSweep { to { transform: rotate(360deg); } }
+    @keyframes cursorBlink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+
+    /* Radar rings */
+    .voice-orb-ring {
+      position: absolute; border-radius: 50%;
+      border: 1px solid rgba(0,255,65,0.2);
       pointer-events: none;
     }
-    .ring-1 { inset: -14px; animation: ringPulse 2.8s infinite linear; }
-    .ring-2 { inset: -28px; animation: ringPulse 2.8s infinite linear 0.9s; }
-    .ring-3 { inset: -44px; animation: ringPulse 2.8s infinite linear 1.8s; }
-
-    @keyframes ringPulse {
-      0% { opacity: 0.8; transform: scale(0.92); }
-      100% { opacity: 0; transform: scale(1.22); }
+    .ring-1 { inset: -10px; animation: radarRingFade 3s infinite linear; }
+    .ring-2 { inset: -22px; animation: radarRingFade 3s infinite linear 1s; }
+    .ring-3 { inset: -36px; animation: radarRingFade 3s infinite linear 2s; }
+    @keyframes radarRingFade {
+      0%   { opacity:0.6; border-color:rgba(0,255,65,0.4); }
+      100% { opacity:0;   border-color:rgba(0,255,65,0); }
     }
 
-    .voice-status-pill {
-      display: inline-block;
-      padding: 6px 18px;
-      border-radius: 24px;
-      background: rgba(255, 255, 255, 0.08);
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      font-size: 14px;
-      font-weight: 500;
-      color: #f3f4f6;
-      letter-spacing: 0.3px;
-      transition: all 0.2s;
+    /* State variants */
+    .voice-orb-container.state-listening .voice-orb-core {
+      border-color: #00ff41;
+      box-shadow: 0 0 24px rgba(0,255,65,0.5), inset 0 0 16px rgba(0,255,65,0.1);
+    }
+    .voice-orb-container.state-thinking .voice-orb-core {
+      border-color: #ffb300;
+      box-shadow: 0 0 30px rgba(255,179,0,0.6), inset 0 0 16px rgba(255,179,0,0.1);
+    }
+    .voice-orb-container.state-thinking .voice-orb-core::before {
+      background: conic-gradient(from 0deg, transparent 0deg, rgba(255,179,0,0.4) 20deg, transparent 21deg);
+      animation: radarSweep 0.8s linear infinite;
+    }
+    .voice-orb-container.state-speaking .voice-orb-core {
+      border-color: #00e5ff;
+      box-shadow: 0 0 30px rgba(0,229,255,0.6), inset 0 0 16px rgba(0,229,255,0.1);
+      animation: speakGlitch 0.15s infinite;
+    }
+    @keyframes speakGlitch {
+      0%,100% { transform: translate(0,0); }
+      25%     { transform: translate(-1px,1px); }
+      75%     { transform: translate(1px,-1px); }
+    }
+    .voice-orb-container.state-muted .voice-orb-core {
+      border-color: #ff0033;
+      box-shadow: 0 0 20px rgba(255,0,51,0.4);
+    }
+    .voice-orb-container.state-muted .voice-orb-core::before { display: none; }
+
+    /* SPECTRUM VISUALIZER */
+    .voice-spectrum-canvas {
+      width: 180px;
+      height: 38px;
+      background: rgba(0, 255, 65, 0.03);
+      border: 1px solid #003a0e;
+      border-radius: 2px;
     }
 
-    .voice-subtitle-card {
-      min-height: 72px;
-      max-height: 140px;
-      overflow-y: auto;
-      width: 100%;
-      background: rgba(18, 18, 22, 0.65);
-      border: 1px solid rgba(255, 255, 255, 0.09);
-      border-radius: 16px;
-      padding: 16px 20px;
-      backdrop-filter: blur(16px);
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
-    }
-
-    .voice-live-caption {
-      font-size: 15px;
-      line-height: 1.55;
-      color: #d1d5db;
-    }
-    .voice-live-caption.user-text {
-      color: #93c5fd;
-      font-style: italic;
-    }
-    .voice-live-caption.assistant-text {
-      color: #f9fafb;
-      font-weight: 500;
-    }
-
-    .voice-bottom-controls {
+    /* PUSH TO TALK BUTTON */
+    .voice-ptt-button {
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 20px;
-      max-width: 600px;
+      gap: 6px;
+      background: rgba(0, 255, 65, 0.06);
+      border: 1px dashed #00ff41;
+      color: #00ff41;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      padding: 7px 12px;
+      border-radius: 2px;
+      cursor: pointer;
+      transition: all 0.15s;
       width: 100%;
-      margin: 0 auto;
+      max-width: 190px;
+      text-transform: uppercase;
+      user-select: none;
+    }
+    .voice-ptt-button:hover {
+      background: rgba(0, 255, 65, 0.14);
+      box-shadow: 0 0 10px rgba(0, 255, 65, 0.3);
+    }
+    .voice-ptt-button.recording {
+      background: rgba(255, 0, 51, 0.2);
+      border: 1px solid #ff0033;
+      color: #ff0033;
+      box-shadow: 0 0 16px rgba(255, 0, 51, 0.6);
+      animation: hackBtnPulse 0.8s infinite alternate;
     }
 
-    .voice-ctrl-btn {
+    /* Status pill */
+    .voice-status-pill {
+      display: flex; align-items: center; gap: 8px;
+      padding: 4px 14px;
+      border: 1px solid #00ff41;
+      border-radius: 2px;
+      font-size: 11px;
+      font-weight: 700;
+      color: #00ff41;
+      letter-spacing: 1.5px;
+      font-family: 'Share Tech Mono', monospace;
+      background: rgba(0,255,65,0.04);
+    }
+    .voice-status-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: #00ff41;
+      box-shadow: 0 0 6px #00ff41;
+      animation: hackBlink 1s step-end infinite;
+    }
+    .voice-status-dot.thinking { background:#ffb300; box-shadow:0 0 6px #ffb300; animation:hackBlink 0.4s step-end infinite; }
+    .voice-status-dot.speaking { background:#00e5ff; box-shadow:0 0 6px #00e5ff; animation:none; }
+    .voice-status-dot.muted    { background:#ff0033; box-shadow:0 0 6px #ff0033; animation:none; }
+
+    /* RIGHT: transcript terminal */
+    .voice-transcript-panel {
+      display: flex; flex-direction: column;
+      min-height: 0; overflow: hidden;
+      background: #000;
+    }
+    .voice-transcript-header {
+      padding: 8px 18px;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: #00b32c;
+      border-bottom: 1px solid #003a0e;
+      display: flex; align-items: center; justify-content: space-between;
+      font-family: 'Share Tech Mono', monospace;
+    }
+    .voice-transcript-scroll {
+      flex: 1; overflow-y: auto;
+      padding: 14px 18px;
+      display: flex; flex-direction: column;
+      gap: 10px;
+      scroll-behavior: smooth;
+    }
+    .voice-transcript-scroll::-webkit-scrollbar { width: 4px; }
+    .voice-transcript-scroll::-webkit-scrollbar-track { background: #000; }
+    .voice-transcript-scroll::-webkit-scrollbar-thumb { background: #00ff41; }
+
+    /* Terminal message lines */
+    .voice-msg {
       display: flex;
       flex-direction: column;
-      align-items: center;
-      gap: 6px;
-      background: rgba(255, 255, 255, 0.08);
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      color: #ededed;
-      border-radius: 16px;
-      padding: 12px 22px;
+      gap: 3px;
+      animation: termPrint 0.15s ease-out;
+      font-family: 'Share Tech Mono', monospace;
       font-size: 13px;
-      font-weight: 500;
-      cursor: pointer;
-      transition: all 0.2s;
-      min-width: 90px;
+      line-height: 1.55;
+    }
+    @keyframes termPrint {
+      from { opacity: 0; transform: translateY(2px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .voice-msg-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 11px;
+      letter-spacing: 1px;
+    }
+    .voice-msg.user .usr-tag {
+      color: #00e5ff;
+      font-weight: 700;
+    }
+    .voice-msg.assistant .ai-tag {
+      color: #00ff41;
+      font-weight: 700;
+      text-shadow: 0 0 6px rgba(0, 255, 65, 0.4);
+    }
+    .voice-msg-badge {
+      background: rgba(0, 255, 65, 0.12);
+      border: 1px solid #00aa2b;
+      color: #00ff41;
+      font-size: 9px;
+      padding: 1px 6px;
+      border-radius: 2px;
+    }
+    .voice-msg-perf {
+      color: #00aa2b;
+      font-size: 10px;
+    }
+    .voice-msg-ts {
+      color: #005018;
+      font-size: 10px;
+      margin-left: auto;
+    }
+    .voice-msg.user .voice-msg-bubble {
+      background: rgba(0, 229, 255, 0.04);
+      border-left: 2px solid #00e5ff;
+      padding: 6px 12px;
+      color: #99f6ff;
+      border-radius: 0 2px 2px 0;
+      word-break: break-word;
+    }
+    .voice-msg.assistant .voice-msg-bubble {
+      background: rgba(0, 255, 65, 0.04);
+      border-left: 2px solid #00ff41;
+      padding: 8px 14px;
+      color: #00ff41;
+      border-radius: 0 2px 2px 0;
+      text-shadow: 0 0 3px rgba(0, 255, 65, 0.25);
+      box-shadow: inset 0 0 15px rgba(0, 255, 65, 0.02);
+      word-break: break-word;
+    }
+    .voice-msg.assistant .voice-bubble-text code {
+      background: #021a08;
+      border: 1px solid #00ff41;
+      color: #73ff8b;
+      padding: 1px 5px;
+      font-size: 12px;
+      border-radius: 2px;
+    }
+    .voice-msg.assistant .voice-bubble-text pre {
+      background: #000c03;
+      border: 1px solid #005018;
+      padding: 8px 10px;
+      margin: 6px 0;
+      overflow-x: auto;
+      color: #00ff41;
+      font-size: 12px;
+    }
+    .voice-msg.assistant .voice-bubble-text p {
+      margin: 4px 0;
+    }
+    .voice-msg.assistant .voice-bubble-text p:first-child {
+      margin-top: 0;
+    }
+    .voice-msg.assistant .voice-bubble-text p:last-child {
+      margin-bottom: 0;
+    }
+    .voice-prompt-sym {
+      color: #0087ff;
+      font-weight: 700;
+      margin-right: 4px;
     }
 
+    /* Typing indicator — blinking cursor */
+    .voice-typing-indicator {
+      display: none; align-items: center;
+      gap: 8px; padding: 6px 12px;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 12px; color: #ffb300;
+      background: rgba(255, 179, 0, 0.05);
+      border-left: 2px solid #ffb300;
+      border-radius: 0 2px 2px 0;
+    }
+    .voice-typing-indicator.active { display: flex; }
+    .voice-cursor-block {
+      display: inline-block;
+      width: 8px; height: 14px;
+      background: #ffb300;
+      animation: blockCursor 0.8s step-end infinite;
+    }
+    @keyframes blockCursor { 0%,100%{opacity:1} 50%{opacity:0} }
+
+    /* BOTTOM */
+    .voice-bottom-area {
+      border-top: 1px solid #00ff41;
+      background: #000;
+      padding: 10px 18px 14px;
+      display: flex; flex-direction: column; gap: 10px;
+    }
+    .voice-input-row {
+      display: flex; gap: 8px;
+      max-width: 900px; margin: 0 auto; width: 100%;
+    }
+    .voice-fallback-input-styled {
+      flex: 1;
+      background: #000;
+      border: 1px solid #00ff41;
+      border-radius: 2px;
+      padding: 8px 14px;
+      color: #00ff41;
+      font-size: 13px;
+      font-family: 'Share Tech Mono', monospace;
+      outline: none;
+      caret-color: #00ff41;
+      letter-spacing: 0.5px;
+    }
+    .voice-fallback-input-styled::placeholder { color: #003a0e; }
+    .voice-fallback-input-styled:focus {
+      box-shadow: 0 0 10px rgba(0,255,65,0.3);
+      border-color: #00ff41;
+    }
+    .voice-send-btn {
+      width: 36px; height: 36px;
+      border-radius: 2px;
+      background: #00ff41;
+      border: none; color: #000;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; transition: all 0.15s;
+      flex-shrink: 0;
+    }
+    .voice-send-btn:hover { background: #00cc34; box-shadow: 0 0 12px rgba(0,255,65,0.6); }
+
+    .voice-bottom-controls {
+      display: flex; align-items: center; justify-content: center;
+      gap: 10px;
+      max-width: 900px; margin: 0 auto; width: 100%;
+      flex-wrap: wrap;
+    }
+    .voice-ctrl-btn {
+      display: flex; flex-direction: column;
+      align-items: center; gap: 4px;
+      background: transparent;
+      border: 1px solid #00ff41;
+      color: #00ff41;
+      border-radius: 2px;
+      padding: 8px 20px;
+      font-size: 11px; font-weight: 700;
+      letter-spacing: 1.5px; text-transform: uppercase;
+      cursor: pointer; transition: all 0.15s;
+      min-width: 80px;
+      font-family: 'Share Tech Mono', monospace;
+    }
     .voice-ctrl-btn:hover {
-      background: rgba(255, 255, 255, 0.16);
-      transform: translateY(-2px);
+      background: rgba(0,255,65,0.1);
+      box-shadow: 0 0 12px rgba(0,255,65,0.4);
+      transform: translateY(-1px);
     }
-
-    .voice-ctrl-btn svg {
-      width: 22px;
-      height: 22px;
-      stroke: currentColor;
-    }
-
+    .voice-ctrl-btn svg { width: 18px; height: 18px; stroke: currentColor; }
     .voice-ctrl-btn.active-muted {
-      background: rgba(239, 68, 68, 0.2);
-      border-color: rgba(239, 68, 68, 0.5);
-      color: #fca5a5;
+      border-color: #ff0033;
+      color: #ff0033;
+      background: rgba(255,0,51,0.08);
     }
-
     .voice-end-btn {
-      background: #ef4444;
-      border-color: #dc2626;
-      color: #ffffff;
+      border-color: #ff0033;
+      color: #ff0033;
+      background: rgba(255,0,51,0.08);
     }
-
     .voice-end-btn:hover {
-      background: #dc2626;
-      border-color: #b91c1c;
-      transform: translateY(-2px);
+      background: rgba(255,0,51,0.2);
+      box-shadow: 0 0 16px rgba(255,0,51,0.5);
+      transform: translateY(-1px);
     }
-
     /* =========================================================================
        MODALS & DROPDOWNS
        ========================================================================= */
@@ -2145,7 +2527,7 @@
             </svg>
           </div>
           <div style="overflow: hidden;">
-            <div class="model-name-text">qwen2.5-lora</div>
+            <div class="model-name-text">Local LLM</div>
             <div class="model-tag-text">1.5b &bull; fp32</div>
           </div>
         </div>
@@ -2176,7 +2558,7 @@
           <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
             <path d="M7 2a2 2 0 0 0-2 2v2h-.5A2.5 2.5 0 0 0 2 8.5V11a2 2 0 0 0 2 2h1v7a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2v-4h4v4a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2v-9.5A3.5 3.5 0 0 0 17.5 7H17V4a2 2 0 0 0-2-2H7zm0 2h8v5h2.5a1.5 1.5 0 0 1 1.5 1.5V13H17v-1a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2v1H7V4z"/>
           </svg>
-          <span>qwen2.5-lora:1.5b</span>
+          <span>Local LLM</span>
           <span class="model-badge-tag" id="nav-device-badge">CPU</span>
           <svg class="icon" style="width:14px; height:14px;" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"></polyline></svg>
         </div>
@@ -2239,7 +2621,7 @@
       <div style="font-weight: 600; font-size: 14px; margin-bottom: 4px;">Model Information</div>
       <div class="popover-row">
         <span class="popover-label">Model Name:</span>
-        <span class="popover-value">qwen2.5-lora:1.5b</span>
+        <span class="popover-value">Local LLM</span>
       </div>
       <div class="popover-row">
         <span class="popover-label">Base Architecture:</span>
@@ -2350,7 +2732,7 @@
         </div>
 
         <div class="dock-disclaimer">
-          qwen2.5-lora:1.5b can make mistakes. Local inference via PEFT adapter.
+          Local LLM can make mistakes. Local inference via PEFT adapter.
         </div>
       </div>
     </div>
@@ -2371,7 +2753,19 @@
       <div class="modal-body">
         <div class="setting-group">
           <div class="setting-label-row">
-            <span>System Prompt</span>
+            <span>System Prompt Persona Preset</span>
+            <span class="setting-value-badge" id="modal-preset-badge">Rich Guide</span>
+          </div>
+          <select id="modal-preset-select" class="nav-select" style="width: 100%; margin-bottom: 10px; font-weight: 500;" onchange="onPresetChange(this.value)">
+            <option value="fast_visual">⚡ Fast Visual Notes (Concept Maps, Workflow, 5+ Markable MCQs)</option>
+            <option value="code_image">🖼️ Code-Based Images &amp; Diagrams (SVG / Canvas / HTML)</option>
+            <option value="prompt_a">📝 Prompt A: Rich Markdown (Icon Cards, Tables, Flows, 5 MCQs)</option>
+            <option value="prompt_b">🎨 Prompt B: ChatGPT Interactive HTML (Live Animated Cards &amp; Quiz)</option>
+            <option value="claude_default">🤖 Direct &amp; Technical (Claude Default)</option>
+            <option value="custom">✏️ Custom System Prompt</option>
+          </select>
+          <div class="setting-label-row">
+            <span>System Instructions</span>
           </div>
           <textarea class="setting-textarea" id="modal-sys-prompt">You are Claude, an AI assistant created to be exceptionally helpful, intellectually rigorous, thoughtful, and honest.
 
@@ -2618,77 +3012,132 @@
   </div>
 
   <!-- =========================================================================
-       CHATGPT-STYLE VOICE CALL MODAL OVERLAY
+       HACKER TERMINAL VOICE CALL MODAL
        ========================================================================= -->
   <div class="voice-modal-overlay" id="voice-call-modal" style="display: none;">
-    <!-- Top Bar: Header & Minimize/Close -->
+
+    <!-- ── TOP BAR ── -->
     <div class="voice-modal-topbar">
-      <div class="voice-model-badge">
-        <span class="voice-dot-live"></span>
-        <span>VOICE CALL &bull; QWEN 2.5</span>
-      </div>
-      <button class="voice-icon-btn" onclick="closeVoiceCallModal()" title="Close / End Call (Esc)">
-        <svg class="icon" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-      </button>
-    </div>
-
-    <!-- Center: The Fluid ChatGPT Orb & Visualizer -->
-    <div class="voice-center-stage">
-      <div class="voice-orb-container state-listening" id="voice-orb-container" onclick="handleVoiceOrbClick()" title="Click to barge-in / interrupt">
-        <div class="voice-orb-glow"></div>
-        <div class="voice-orb-core" id="voice-orb-core">
-          <div class="voice-orb-ring ring-1"></div>
-          <div class="voice-orb-ring ring-2"></div>
-          <div class="voice-orb-ring ring-3"></div>
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+        <div class="voice-model-badge">
+          <span class="voice-dot-live"></span>
+          <span>NET://SECURE-ROOT &bull; QWEN 2.5</span>
         </div>
+        <button id="voice-offline-mode-btn" class="voice-hacker-mode-toggle offline-active"
+                onclick="toggleVoiceOfflineMode()" title="Toggle Offline/Online Speech Recognition">
+          <span class="voice-status-dot" style="width:6px;height:6px;display:inline-block;"></span>
+          <span id="voice-mode-label">MODE: OFFLINE (LOCAL SAPI)</span>
+        </button>
       </div>
 
-      <!-- Status label -->
-      <div class="voice-status-pill" id="voice-status-pill">Listening...</div>
-
-      <!-- Live Caption / Subtitle -->
-      <div class="voice-subtitle-card">
-        <div class="voice-live-caption" id="voice-live-caption">Say something to start speaking...</div>
-      </div>
-
-      <!-- Direct Push / Fallback Voice Input (Section 5.3.d) -->
-      <div class="voice-fallback-bar" id="voice-fallback-bar" style="display: flex; gap: 8px; width: 100%;">
-        <input type="text" id="voice-fallback-input" class="voice-fallback-input" placeholder="Type here or speak to the agent..." onkeydown="if(event.key==='Enter') submitVoiceFallbackText()" style="flex: 1; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); border-radius: 20px; padding: 10px 16px; color: #fff; font-size: 14px; outline: none;">
-        <button type="button" onclick="submitVoiceFallbackText()" class="voice-icon-btn" style="width: 38px; height: 38px; border-radius: 50%;" title="Send spoken turn">
-          <svg class="icon" viewBox="0 0 24 24" style="stroke: #fff; width: 16px; height: 16px;"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+      <div style="display:flex;align-items:center;gap:14px;">
+        <span class="voice-call-timer" id="voice-call-timer">00:00</span>
+        <button class="voice-icon-btn" onclick="closeVoiceCallModal()" title="Disconnect [Esc]">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </button>
       </div>
     </div>
 
-    <!-- Bottom Bar: Controls -->
-    <div class="voice-bottom-controls">
-      <!-- Mute Button -->
-      <button class="voice-ctrl-btn" id="voice-mute-btn" onclick="toggleVoiceMute()" title="Mute Microphone (M)">
-        <svg class="icon" id="voice-mute-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path>
-          <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
-          <line x1="12" y1="19" x2="12" y2="22"></line>
-        </svg>
-        <span id="voice-mute-text">Mute</span>
-      </button>
+    <!-- ── MIDDLE: ORB LEFT | TRANSCRIPT RIGHT ── -->
+    <div class="voice-center-stage">
 
-      <!-- Barge-in / Interrupt Button -->
-      <button class="voice-ctrl-btn" id="voice-barge-btn" onclick="triggerBargeIn()" title="Interrupt / Stop Speaking (Space)">
-        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <rect x="6" y="4" width="4" height="16"></rect>
-          <rect x="14" y="4" width="4" height="16"></rect>
-        </svg>
-        <span>Interrupt</span>
-      </button>
+      <!-- LEFT: Tactical Radar + Audio Spectrum + Status -->
+      <div class="voice-orb-panel">
+        <div class="voice-orb-container state-listening" id="voice-orb-container"
+             onclick="handleVoiceOrbClick()" title="Click to interrupt / toggle listen">
+          <div class="voice-orb-glow"></div>
+          <div class="voice-orb-core" id="voice-orb-core">
+            <div class="voice-orb-ring ring-1"></div>
+            <div class="voice-orb-ring ring-2"></div>
+            <div class="voice-orb-ring ring-3"></div>
+          </div>
+        </div>
 
-      <!-- End Call Button (Red Hangup) -->
-      <button class="voice-ctrl-btn voice-end-btn" onclick="closeVoiceCallModal()" title="End Voice Call">
-        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="stroke: #ffffff;">
-          <path d="M10.68 13.31a16 16 0 0 0 3.41 2.6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7 2 2 0 0 1 1.72 2v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.42 19.42 0 0 1-6-6 19.8 19.8 0 0 1-3.11-8.69A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91"></path>
-          <line x1="23" y1="1" x2="1" y2="23" style="stroke: #ffffff; stroke-width: 2.5;"></line>
-        </svg>
-        <span>End Call</span>
-      </button>
+        <!-- Real-time audio spectrum analyzer canvas -->
+        <canvas id="voice-spectrum-canvas" class="voice-spectrum-canvas" width="180" height="38" title="Audio Spectrum (16kHz)"></canvas>
+
+        <div class="voice-status-pill" id="voice-status-pill">
+          <span class="voice-status-dot" id="voice-status-dot"></span>
+          <span id="voice-status-label">LISTENING...</span>
+        </div>
+
+        <!-- Push-to-talk button for 100% offline local SAPI -->
+        <button id="voice-ptt-btn" class="voice-ptt-button"
+                onmousedown="startOfflinePTT()" onmouseup="stopOfflinePTT()"
+                ontouchstart="startOfflinePTT(event)" ontouchend="stopOfflinePTT(event)"
+                title="Hold to speak directly to offline local SAPI engine">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
+          <span id="voice-ptt-label">HOLD TO TRANSMIT</span>
+        </button>
+      </div>
+
+      <!-- RIGHT: Interceptor Terminal Log & Response Screen -->
+      <div class="voice-transcript-panel">
+        <div class="voice-transcript-header">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+            <span>/dev/pts/0 &bull; INTERCEPTOR_STREAM</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <span style="color:#005018;font-size:10px;">AIR-GAPPED // AES-256</span>
+            <button onclick="clearVoiceTranscript()" style="background:none;border:none;color:#0087ff;cursor:pointer;font-family:inherit;font-size:10px;">[CLEAR]</button>
+          </div>
+        </div>
+        <div class="voice-transcript-scroll" id="voice-transcript-scroll">
+          <div class="voice-msg system-banner" style="border:1px solid #003a0e;background:rgba(0,255,65,0.02);padding:6px 10px;font-size:11px;color:#00aa2b;">
+            [SYSTEM BOOT] QWEN NEURAL CORE ONLINE &bull; STT: LOCAL SAPI &bull; READY FOR INJECTION
+          </div>
+          <!-- Typing indicator (shown while agent thinks) -->
+          <div class="voice-typing-indicator" id="voice-typing-indicator">
+            <span class="voice-msg-tag ai-tag">root@qwen-core:~#</span>
+            <span class="voice-typing-label">DECRYPTING NEURAL STREAM...</span>
+            <span class="voice-cursor-block">█</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── BOTTOM: Input + Controls ── -->
+    <div class="voice-bottom-area">
+      <!-- Text fallback input -->
+      <div class="voice-input-row">
+        <div style="display:flex;align-items:center;color:#00ff41;font-size:12px;font-family:'Share Tech Mono',monospace;user-select:none;padding-left:4px;">
+          root@term:~$&nbsp;
+        </div>
+        <input type="text" id="voice-fallback-input" class="voice-fallback-input-styled"
+               placeholder="Inject command or speak into microphone..."
+               onkeydown="if(event.key==='Enter') submitVoiceFallbackText()">
+        <button type="button" class="voice-send-btn" onclick="submitVoiceFallbackText()" title="Transmit Command [Enter]">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2" fill="currentColor" stroke="none"/></svg>
+        </button>
+      </div>
+
+      <!-- Control buttons -->
+      <div class="voice-bottom-controls">
+        <button class="voice-ctrl-btn" id="voice-mute-btn" onclick="toggleVoiceMute()" title="Mute Mic [M]">
+          <svg id="voice-mute-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;">
+            <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/>
+            <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+            <line x1="12" y1="19" x2="12" y2="22"/>
+          </svg>
+          <span id="voice-mute-text">SIGSTOP (MUTE)</span>
+        </button>
+
+        <button class="voice-ctrl-btn" id="voice-barge-btn" onclick="triggerBargeIn()" title="Interrupt Agent [Space/Esc]">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;">
+            <rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>
+          </svg>
+          <span>SIGINT (INTERRUPT)</span>
+        </button>
+
+        <button class="voice-ctrl-btn voice-end-btn" onclick="closeVoiceCallModal()" title="Terminate Connection">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#ff0033" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;">
+            <path d="M10.68 13.31a16 16 0 0 0 3.41 2.6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7 2 2 0 0 1 1.72 2v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.42 19.42 0 0 1-6-6 19.8 19.8 0 0 1-3.11-8.69A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91"/>
+            <line x1="23" y1="1" x2="1" y2="23" stroke="#ff0033" stroke-width="2.5"/>
+          </svg>
+          <span>SIGTERM (DISCONNECT)</span>
+        </button>
+      </div>
     </div>
   </div>
 
@@ -2720,28 +3169,34 @@
     let abortController = null;
     let lastUserPrompt = '';
 
-    const CLAUDE_DEFAULT_PROMPT = `You are Claude, an AI assistant created to be exceptionally helpful, intellectually rigorous, thoughtful, and honest.
-
-1. DYNAMIC LENGTH & DEPTH CALIBRATION:
-- Calibrate the length and depth of your answer to the user's intent.
-- For quick factual questions, short requests, or simple queries: be direct, crisp, and concise (1 to 3 sentences).
-- For programming, technical development, or scripts: write complete, comprehensive, production-grade code (up to 3,000+ words if needed). NEVER leave lazy placeholders like '// TODO' or '// rest of code'. Implement complete, fully functional, elegant solutions with error handling.
-- For architecture, essays, guides, or analytical comparisons: provide rich, multi-dimensional structures with markdown headers, tables, bullet points, and actionable breakdowns.
-
-2. PROGRAMMING & TECHNICAL MASTERY:
-- Write clean, modern, modular, idiomatic code adhering to industry best practices.
-- Always wrap code blocks with exact language identifiers (e.g., \`\`\`python, \`\`\`javascript, \`\`\`html).
-
-3. COMMUNICATION STYLE & DIRECTNESS:
-- Start directly with the answer or solution. Eliminate conversational filler and sycophancy.
-- Use elegant, clean GitHub-style markdown formatting.`;
+    // Prompt presets are loaded from /api/presets at startup to avoid JS template-literal escaping issues.
+    // These variables are populated by loadPresets() before loadSavedData() is called.
+    let CLAUDE_DEFAULT_PROMPT = '';
+    let PROMPT_A_TEXT = '';
+    let PROMPT_B_TEXT = '';
+    let FAST_VISUAL_TEXT = '';
+    let CODE_IMAGE_TEXT = '';
+    window.FAST_VISUAL_TEMPLATE_HTML = '';
 
     let settings = {
-      system_prompt: CLAUDE_DEFAULT_PROMPT,
-      temperature: 0.7,
+      system_prompt: PROMPT_A_TEXT,
+      temperature: 0.5,
       top_p: 0.9,
       max_tokens: 4096
     };
+
+    // Initialize Mermaid for diagram rendering
+    if (window.mermaid) {
+      try {
+        mermaid.initialize({
+          startOnLoad: false,
+          theme: (localStorage.getItem(THEME_KEY) === 'light') ? 'default' : 'dark',
+          securityLevel: 'loose'
+        });
+      } catch (e) {
+        console.warn('Mermaid init warning:', e);
+      }
+    }
 
     // Configure Marked options
     marked.setOptions({
@@ -2757,10 +3212,119 @@
       gfm: true
     });
 
-    // Custom renderer for code blocks with "Copy" header (like Ollama / Open WebUI)
+    // Custom renderer for code blocks, Mermaid diagrams, SVG graphics, and interactive HTML widgets
     const renderer = new marked.Renderer();
     renderer.code = function(code, language) {
       const validLang = (language || 'plaintext').toLowerCase();
+      const uniqueId = 'rich-widget-' + Math.random().toString(36).substring(2, 9);
+      const escapedCode = encodeURIComponent(code);
+
+      // 1. Mermaid diagrams
+      if (validLang === 'mermaid') {
+        return `
+          <div class="mermaid-container" id="${uniqueId}">
+            <div class="mermaid">${escapeHtml(code)}</div>
+          </div>
+        `;
+      }
+
+      // 2. SVG Graphics & Animations
+      if (validLang === 'svg' || (code.trim().startsWith('<svg') && code.trim().endsWith('</svg>'))) {
+        return `
+          <div class="rich-preview-card" id="${uniqueId}">
+            <div class="rich-preview-header">
+              <div class="rich-preview-badge">🎨 SVG Graphic / Animation</div>
+              <div class="rich-preview-actions">
+                <button class="rich-toggle-btn" onclick="toggleSourceView('${uniqueId}')">
+                  <span>Source</span>
+                </button>
+                <button class="copy-code-btn" onclick="copyCode(this, decodeURIComponent('${escapedCode}'))">
+                  <span>Copy</span>
+                </button>
+              </div>
+            </div>
+            <div class="rich-svg-display">${code}</div>
+            <div class="rich-source-drawer" style="display:none; padding:12px; background:var(--code-bg); border-top:1px solid var(--border-subtle);">
+              <pre style="margin:0;"><code class="hljs language-xml">${escapeHtml(code)}</code></pre>
+            </div>
+          </div>
+        `;
+      }
+
+      // 3. Interactive HTML Widgets / Quizzes / Live Sandboxes
+      if (validLang === 'html' && (code.includes('<script') || code.includes('<style') || code.includes('id="quiz"') || code.includes('QUESTIONS') || code.includes('@keyframes'))) {
+        const iframeSrcDoc = escapeHtml(code);
+        return `
+          <div class="rich-preview-card" id="${uniqueId}">
+            <div class="rich-preview-header">
+              <div class="rich-preview-badge">🧪 Interactive Widget / Live Quiz</div>
+              <div class="rich-preview-actions">
+                <button class="rich-toggle-btn" onclick="toggleSourceView('${uniqueId}')">
+                  <span>Source</span>
+                </button>
+                <button class="copy-code-btn" onclick="copyCode(this, decodeURIComponent('${escapedCode}'))">
+                  <span>Copy</span>
+                </button>
+              </div>
+            </div>
+            <iframe class="rich-iframe-body" sandbox="allow-scripts" srcdoc="${iframeSrcDoc}"></iframe>
+            <div class="rich-source-drawer" style="display:none; padding:12px; background:var(--code-bg); border-top:1px solid var(--border-subtle);">
+              <pre style="margin:0;"><code class="hljs language-html">${escapeHtml(code)}</code></pre>
+            </div>
+          </div>
+        `;
+      }
+ 
+       // 3b. Fast Visual Notes JSON (Interactive Concept Map, Animated Workflow, 5+ MCQs)
+       if ((validLang === 'json' || validLang === '') && code.includes('"blocks"') && (code.includes('"radial"') || code.includes('"workflow"') || code.includes('"quiz"') || code.includes('"cards"') || code.includes('"layers"'))) {
+         try {
+           let cleanJson = code.trim();
+           if (!cleanJson.startsWith('{') && cleanJson.includes('"blocks"')) {
+             cleanJson = '{"blocks":[' + cleanJson;
+           }
+           const a = cleanJson.indexOf('{');
+           const z = cleanJson.lastIndexOf('}');
+           if (a >= 0 && z > a) cleanJson = cleanJson.slice(a, z + 1);
+           cleanJson = cleanJson.replace(/,\s*([}\]])/g, '$1');
+           const parsed = JSON.parse(cleanJson);
+           if (parsed && Array.isArray(parsed.blocks)) {
+             const rawTpl = window.FAST_VISUAL_TEMPLATE_HTML || '';
+             let fullHtml = '';
+             if (rawTpl && rawTpl.includes('/*DATA*/null')) {
+               fullHtml = rawTpl.replace('/*DATA*/null', JSON.stringify(parsed).replace(/<\/script/gi, '<\\/script'));
+             } else {
+               fullHtml = '<!DOCTYPE html><html><body><pre>' + escapeHtml(JSON.stringify(parsed, null, 2)) + '</pre></body></html>';
+             }
+             const iframeSrcDoc = escapeHtml(fullHtml);
+             return `
+               <div class="rich-preview-card" id="${uniqueId}">
+                 <div class="rich-preview-header">
+                   <div class="rich-preview-badge">⚡ Live Visual Study Notes &amp; Quiz</div>
+                   <div class="rich-preview-actions">
+                     <button class="rich-toggle-btn" onclick="openVisualNotesInNewTab('${uniqueId}')">
+                       <span>Full Page</span>
+                     </button>
+                     <button class="rich-toggle-btn" onclick="toggleSourceView('${uniqueId}')">
+                       <span>JSON</span>
+                     </button>
+                     <button class="copy-code-btn" onclick="copyCode(this, decodeURIComponent('${escapedCode}'))">
+                       <span>Copy</span>
+                     </button>
+                   </div>
+                 </div>
+                 <iframe class="rich-iframe-body" style="min-height:560px;" sandbox="allow-scripts" srcdoc="${iframeSrcDoc}"></iframe>
+                 <div class="rich-source-drawer" style="display:none; padding:12px; background:var(--code-bg); border-top:1px solid var(--border-subtle);">
+                   <pre style="margin:0;"><code class="hljs language-json">${escapeHtml(code)}</code></pre>
+                 </div>
+               </div>
+             `;
+           }
+         } catch (e) {
+           // If JSON is incomplete during streaming, proceed to standard code highlighting
+         }
+       }
+
+      // Standard code block
       let highlighted = code;
       try {
         if (hljs.getLanguage(validLang)) {
@@ -2769,10 +3333,9 @@
           highlighted = hljs.highlightAuto(code).value;
         }
       } catch (err) {
-        highlighted = code;
+        highlighted = escapeHtml(code);
       }
 
-      const escapedCode = encodeURIComponent(code);
       return `
         <div class="code-block-wrapper">
           <div class="code-block-header">
@@ -2787,6 +3350,40 @@
       `;
     };
     marked.use({ renderer });
+
+    function safeRenderMarkdown(text) {
+      if (!text) return '';
+      try {
+        if (typeof marked !== 'undefined' && marked.parse) {
+          return marked.parse(text);
+        }
+      } catch (err) {
+        console.warn('Markdown parse warning:', err);
+      }
+      return escapeHtml(text).replace(/\n/g, '<br>');
+    }
+
+    function toggleSourceView(widgetId) {
+      const widget = document.getElementById(widgetId);
+      if (!widget) return;
+      const drawer = widget.querySelector('.rich-source-drawer');
+      if (drawer) {
+        drawer.style.display = (drawer.style.display === 'none') ? 'block' : 'none';
+      }
+    }
+
+    function renderMermaidInContainer(container) {
+      if (window.mermaid) {
+        try {
+          const elements = (container || document).querySelectorAll('.mermaid:not([data-processed="true"])');
+          if (elements.length > 0) {
+            mermaid.run({ nodes: elements });
+          }
+        } catch (e) {
+          console.warn('Mermaid render error:', e);
+        }
+      }
+    }
 
     // ---------------------------------------------------------
     // Initialization & Storage
@@ -2995,6 +3592,7 @@
         appendMessageTurn(msg.role, msg.content, msg.stats, false, msg.citations);
       });
 
+      renderMermaidInContainer(container);
       scrollChatToBottom();
     }
 
@@ -3016,7 +3614,7 @@
           </div>
         `;
       } else {
-        const parsedHtml = marked.parse(content || '');
+        const parsedHtml = safeRenderMarkdown(content || '');
         const statsHtml = stats ? `
           <div class="stats-pill" title="Inference speed & tokens">
             <span>⚡ ${stats.speed || '-'} t/s</span>
@@ -3078,6 +3676,9 @@
       }
 
       container.appendChild(turn);
+      if (!isLiveStreaming) {
+        renderMermaidInContainer(turn);
+      }
       scrollChatToBottom();
       return turn;
     }
@@ -3137,6 +3738,8 @@
         }
       }
 
+      const activePreset = document.getElementById('modal-preset-select');
+      const presetVal = activePreset ? activePreset.value : null;
       const payload = {
         prompt: promptText,
         system_prompt: settings.system_prompt,
@@ -3145,7 +3748,8 @@
         temperature: parseFloat(settings.temperature),
         top_p: parseFloat(settings.top_p),
         search_mode: currentSearchMode,
-        web_access_enabled: webAccessEnabled
+        web_access_enabled: webAccessEnabled,
+        format_preset: (presetVal && presetVal !== 'custom') ? presetVal : undefined
       };
 
       let fullAssistantReply = '';
@@ -3328,7 +3932,7 @@
                     statusBadgeEl = null;
                   }
                   fullAssistantReply += parsed.token;
-                  botContentEl.innerHTML = marked.parse(fullAssistantReply) + '<span class="streaming-cursor"></span>';
+                  botContentEl.innerHTML = safeRenderMarkdown(fullAssistantReply) + '<span class="streaming-cursor"></span>';
                   scrollChatToBottom();
                 } else if (parsed.done) {
                   if (parsed.citations) citationsList = parsed.citations;
@@ -3354,7 +3958,8 @@
         }
 
         // Finalize bot message without cursor
-        botContentEl.innerHTML = marked.parse(fullAssistantReply);
+        botContentEl.innerHTML = safeRenderMarkdown(fullAssistantReply);
+        renderMermaidInContainer(botTurn);
 
         // Render Citations Panel if sources were cited
         if (citationsList && citationsList.length > 0) {
@@ -3949,7 +4554,62 @@
       if (key === 'tokens') document.getElementById('modal-tokens-val').innerText = val;
     }
 
+    function onPresetChange(val) {
+      const textarea = document.getElementById('modal-sys-prompt');
+      const badge = document.getElementById('modal-preset-badge');
+      const tempSlider = document.getElementById('modal-temp-slider');
+      const tempVal = document.getElementById('modal-temp-val');
+      if (val === 'fast_visual') {
+        textarea.value = FAST_VISUAL_TEXT;
+        if (badge) badge.innerText = 'Fast Visual Notes';
+        settings.temperature = 0.4;
+        if (tempSlider) tempSlider.value = 0.4;
+        if (tempVal) tempVal.innerText = '0.4';
+      } else if (val === 'code_image') {
+        textarea.value = CODE_IMAGE_TEXT;
+        if (badge) badge.innerText = 'Code-Based Images & Diagrams';
+        settings.temperature = 0.2;
+        if (tempSlider) tempSlider.value = 0.2;
+        if (tempVal) tempVal.innerText = '0.2';
+      } else if (val === 'prompt_a') {
+        textarea.value = PROMPT_A_TEXT;
+        if (badge) badge.innerText = 'Prompt A: Markdown';
+      } else if (val === 'prompt_b') {
+        textarea.value = PROMPT_B_TEXT;
+        if (badge) badge.innerText = 'Prompt B: HTML';
+      } else if (val === 'claude_default') {
+        textarea.value = CLAUDE_DEFAULT_PROMPT;
+        if (badge) badge.innerText = 'Claude Direct';
+      } else {
+        if (badge) badge.innerText = 'Custom';
+      }
+    }
+
     function applySettingsToUI() {
+      const currentPrompt = settings.system_prompt ? settings.system_prompt.trim() : '';
+      const presetSelect = document.getElementById('modal-preset-select');
+      const badge = document.getElementById('modal-preset-badge');
+
+      if (currentPrompt === FAST_VISUAL_TEXT.trim() || currentPrompt.includes('Output ONLY one valid JSON object')) {
+        if (presetSelect) presetSelect.value = 'fast_visual';
+        if (badge) badge.innerText = 'Fast Visual Notes';
+      } else if (CODE_IMAGE_TEXT && (currentPrompt === CODE_IMAGE_TEXT.trim() || currentPrompt.includes('CAN create images, logos, icons'))) {
+        if (presetSelect) presetSelect.value = 'code_image';
+        if (badge) badge.innerText = 'Code-Based Images & Diagrams';
+      } else if (currentPrompt === PROMPT_B_TEXT.trim() || currentPrompt.includes('study-notes engine')) {
+        if (presetSelect) presetSelect.value = 'prompt_b';
+        if (badge) badge.innerText = 'Prompt B: HTML';
+      } else if (currentPrompt === PROMPT_A_TEXT.trim() || currentPrompt.includes('subject-expert tutor and study-notes writer')) {
+        if (presetSelect) presetSelect.value = 'prompt_a';
+        if (badge) badge.innerText = 'Prompt A: Markdown';
+      } else if (currentPrompt === CLAUDE_DEFAULT_PROMPT.trim()) {
+        if (presetSelect) presetSelect.value = 'claude_default';
+        if (badge) badge.innerText = 'Claude Direct';
+      } else {
+        if (presetSelect) presetSelect.value = 'custom';
+        if (badge) badge.innerText = 'Custom';
+      }
+
       document.getElementById('modal-sys-prompt').value = settings.system_prompt;
       document.getElementById('modal-temp-slider').value = settings.temperature;
       document.getElementById('modal-temp-val').innerText = settings.temperature;
@@ -3971,8 +4631,8 @@
 
     function resetSettings() {
       settings = {
-        system_prompt: CLAUDE_DEFAULT_PROMPT,
-        temperature: 0.7,
+        system_prompt: PROMPT_A_TEXT,
+        temperature: 0.5,
         top_p: 0.9,
         max_tokens: 4096
       };
@@ -4068,7 +4728,7 @@
     }
 
     // =========================================================================
-    // REAL-TIME VOICE CALL MODE (ChatGPT Style)
+    // REAL-TIME HACKER VOICE CALL & OFFLINE SAPI ENGINE
     // =========================================================================
     let voiceRecognition = null;
     let voiceAudioCtx = null;
@@ -4078,16 +4738,87 @@
     let isVoiceCallActive = false;
     let isVoiceMuted = false;
     let isSpeakingAssistant = false;
-    let voiceState = 'IDLE'; // IDLE | LISTENING | THINKING | SPEAKING
+    let voiceState = 'IDLE';
     let currentUtterance = null;
+    let voiceCallTimerInterval = null;
+    let voiceCallStartTime = null;
+
+    // Offline mode state: 'OFFLINE' (local Windows SAPI) or 'ONLINE' (Web Speech API)
+    let voiceEngineMode = 'OFFLINE';
+    let isOfflineRecording = false;
+    let offlineAudioProcessor = null;
+    let offlinePcmChunks = [];
+    let offlineSilenceTimer = null;
+    let offlineLastSpeechTime = 0;
+    let isPttActive = false;
+
+    function toggleVoiceOfflineMode() {
+      if (voiceEngineMode === 'OFFLINE') {
+        voiceEngineMode = 'ONLINE';
+      } else {
+        voiceEngineMode = 'OFFLINE';
+      }
+      updateVoiceModeUI();
+      // Restart session with new engine mode if active
+      if (isVoiceCallActive) {
+        stopVoiceRecognitionEngine();
+        startVoiceRecognitionEngine();
+      }
+    }
+
+    function updateVoiceModeUI() {
+      const btn = document.getElementById('voice-offline-mode-btn');
+      const label = document.getElementById('voice-mode-label');
+      const pttBtn = document.getElementById('voice-ptt-btn');
+      if (!btn || !label) return;
+
+      if (voiceEngineMode === 'OFFLINE') {
+        btn.classList.add('offline-active');
+        label.textContent = 'MODE: OFFLINE (LOCAL SAPI)';
+        if (pttBtn) pttBtn.style.display = 'flex';
+      } else {
+        btn.classList.remove('offline-active');
+        label.textContent = 'MODE: ONLINE (WEB SPEECH)';
+        if (pttBtn) pttBtn.style.display = 'flex';
+      }
+    }
+
+    function clearVoiceTranscript() {
+      const scroll = document.getElementById('voice-transcript-scroll');
+      if (!scroll) return;
+      scroll.innerHTML = `
+        <div class="voice-msg system-banner" style="border:1px solid #003a0e;background:rgba(0,255,65,0.02);padding:6px 10px;font-size:11px;color:#00aa2b;">
+          [TERMINAL BUFFER CLEARED] &bull; READY FOR INJECTION
+        </div>
+        <div class="voice-typing-indicator" id="voice-typing-indicator">
+          <span class="voice-msg-tag ai-tag">root@qwen-core:~#</span>
+          <span class="voice-typing-label">DECRYPTING NEURAL STREAM...</span>
+          <span class="voice-cursor-block">█</span>
+        </div>`;
+    }
 
     function openVoiceCallModal() {
       const modal = document.getElementById('voice-call-modal');
       const btn = document.getElementById('voice-call-btn');
       if (!modal) return;
-      modal.style.display = 'flex';
+      modal.style.display = 'grid';
       if (btn) btn.classList.add('active-pulse');
       isVoiceCallActive = true;
+      updateVoiceModeUI();
+
+      // Reset call timer
+      voiceCallStartTime = Date.now();
+      const timerEl = document.getElementById('voice-call-timer');
+      if (timerEl) timerEl.textContent = '00:00';
+      if (voiceCallTimerInterval) clearInterval(voiceCallTimerInterval);
+      voiceCallTimerInterval = setInterval(() => {
+        if (!timerEl) return;
+        const s = Math.floor((Date.now() - voiceCallStartTime) / 1000);
+        const m = String(Math.floor(s / 60)).padStart(2, '0');
+        const ss = String(s % 60).padStart(2, '0');
+        timerEl.textContent = `${m}:${ss}`;
+      }, 1000);
+
       setVoiceState('LISTENING');
       startVoiceSession();
     }
@@ -4097,53 +4828,127 @@
       const btn = document.getElementById('voice-call-btn');
       if (modal) modal.style.display = 'none';
       if (btn) btn.classList.remove('active-pulse');
+      if (voiceCallTimerInterval) { clearInterval(voiceCallTimerInterval); voiceCallTimerInterval = null; }
       stopVoiceSession();
     }
 
     function setVoiceState(newState, label = null) {
       voiceState = newState;
       const orbContainer = document.getElementById('voice-orb-container');
-      const pill = document.getElementById('voice-status-pill');
-      if (!orbContainer || !pill) return;
+      const statusLabel = document.getElementById('voice-status-label');
+      const statusDot   = document.getElementById('voice-status-dot');
+      const typingInd   = document.getElementById('voice-typing-indicator');
+      if (!orbContainer) return;
 
       orbContainer.classList.remove('state-listening', 'state-thinking', 'state-speaking', 'state-muted');
+      if (statusDot) statusDot.className = 'voice-status-dot';
+      if (typingInd) typingInd.classList.remove('active');
 
       if (isVoiceMuted) {
         orbContainer.classList.add('state-muted');
-        pill.innerText = 'Microphone Muted';
-        pill.style.borderColor = 'rgba(239, 68, 68, 0.4)';
+        if (statusLabel) statusLabel.textContent = 'SIGSTOP (MUTED)';
+        if (statusDot) statusDot.classList.add('muted');
         return;
       }
 
-      pill.style.borderColor = 'rgba(255, 255, 255, 0.12)';
-
       if (newState === 'LISTENING') {
         orbContainer.classList.add('state-listening');
-        pill.innerText = label || 'Listening...';
+        if (statusLabel) statusLabel.textContent = label || (voiceEngineMode === 'OFFLINE' ? 'LISTENING [OFFLINE]' : 'LISTENING [ONLINE]');
+      } else if (newState === 'RECORDING') {
+        orbContainer.classList.add('state-listening');
+        if (statusLabel) statusLabel.textContent = label || 'RECORDING AUDIO...';
       } else if (newState === 'THINKING') {
         orbContainer.classList.add('state-thinking');
-        pill.innerText = label || 'Thinking...';
+        if (statusLabel) statusLabel.textContent = label || 'DECRYPTING...';
+        if (statusDot) statusDot.classList.add('thinking');
+        if (typingInd) typingInd.classList.add('active');
+        const scroll = document.getElementById('voice-transcript-scroll');
+        if (scroll) scroll.scrollTop = scroll.scrollHeight;
       } else if (newState === 'SPEAKING') {
         orbContainer.classList.add('state-speaking');
-        pill.innerText = label || 'Speaking...';
+        if (statusLabel) statusLabel.textContent = label || 'TRANSMITTING VOICE';
+        if (statusDot) statusDot.classList.add('speaking');
       } else {
-        pill.innerText = label || 'Ready';
+        if (statusLabel) statusLabel.textContent = label || 'READY';
       }
     }
 
-    function updateVoiceCaption(text, type = 'user') {
-      const cap = document.getElementById('voice-live-caption');
-      if (!cap) return;
-      cap.className = `voice-live-caption ${type}-text`;
-      cap.innerText = text;
+    function _voiceNow() {
+      const d = new Date();
+      return d.toTimeString().split(' ')[0];
     }
 
+    function formatHackerText(rawText) {
+      if (!rawText) return '';
+      let escaped = escapeHtml(rawText);
+      // Code blocks
+      escaped = escaped.replace(/```([a-zA-Z0-9_-]*)\n([\s\S]*?)```/g, (m, lang, code) => {
+        return `<pre><code>${code.trim()}</code></pre>`;
+      });
+      // Inline code
+      escaped = escaped.replace(/`([^`]+)`/g, '<code>$1</code>');
+      // Bold
+      escaped = escaped.replace(/\*\*([^*]+)\*\*/g, '<strong style="color:#73ff8b;">$1</strong>');
+      // Bullet points
+      escaped = escaped.replace(/^[*-]\s+(.+)$/gm, '<div style="margin:2px 0;"><span style="color:#00ff41;margin-right:4px;">►</span>$1</div>');
+      // Paragraphs
+      const paragraphs = escaped.split(/\n\n+/);
+      return paragraphs.map(p => {
+        if (p.startsWith('<pre') || p.includes('►')) return p;
+        return `<p style="margin:4px 0;">${p.replace(/\n/g, '<br>')}</p>`;
+      }).join('');
+    }
+
+    function updateVoiceCaption(text, type = 'user', stats = null) {
+      const typingInd = document.getElementById('voice-typing-indicator');
+      if (typingInd) typingInd.classList.remove('active');
+
+      const scroll = document.getElementById('voice-transcript-scroll');
+      if (!scroll || !text) return;
+
+      const isUser = (type === 'user');
+      const msgEl = document.createElement('div');
+      msgEl.className = `voice-msg ${isUser ? 'user' : 'assistant'}`;
+
+      if (isUser) {
+        msgEl.innerHTML = `
+          <div class="voice-msg-header">
+            <span class="voice-msg-tag usr-tag">usr@terminal:~$</span>
+            <span class="voice-msg-badge" style="border-color:#00e5ff;color:#00e5ff;">PACKET_IN</span>
+            <span class="voice-msg-ts">${_voiceNow()}</span>
+          </div>
+          <div class="voice-msg-bubble usr-bubble">
+            <span class="voice-prompt-sym">&gt;</span> <span class="voice-bubble-text">${escapeHtml(text)}</span>
+          </div>`;
+      } else {
+        const perfStr = stats && stats.duration ? `<span class="voice-msg-perf">[${stats.duration}s &bull; ${stats.speed || '-'} tok/s]</span>` : '';
+        msgEl.innerHTML = `
+          <div class="voice-msg-header">
+            <span class="voice-msg-tag ai-tag">root@qwen-core:~#</span>
+            <span class="voice-msg-badge">KERNEL_REPLY</span>
+            ${perfStr}
+            <span class="voice-msg-ts">${_voiceNow()}</span>
+          </div>
+          <div class="voice-msg-bubble ai-bubble">
+            <div class="voice-bubble-text">${formatHackerText(text)}</div>
+          </div>`;
+      }
+
+      if (typingInd && typingInd.parentNode === scroll) {
+        scroll.insertBefore(msgEl, typingInd);
+      } else {
+        scroll.appendChild(msgEl);
+      }
+      scroll.scrollTop = scroll.scrollHeight;
+    }
+
+    // ── AUDIO VISUALIZER & SPECTRUM EQUALIZER ──
     async function initVoiceAudioVisualizer() {
       try {
         if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return;
         if (!voiceAudioCtx) {
           const AudioContext = window.AudioContext || window.webkitAudioContext;
-          voiceAudioCtx = new AudioContext();
+          voiceAudioCtx = new AudioContext({ sampleRate: 16000 });
         }
         if (voiceAudioCtx.state === 'suspended') {
           await voiceAudioCtx.resume();
@@ -4156,20 +4961,51 @@
         voiceAnalyser.fftSize = 64;
         source.connect(voiceAnalyser);
 
-        const dataArray = new Uint8Array(voiceAnalyser.frequencyBinCount);
+        // Also setup script processor for Offline PCM recording
+        setupOfflineAudioProcessor(source);
+
+        const freqData = new Uint8Array(voiceAnalyser.frequencyBinCount);
         const core = document.getElementById('voice-orb-core');
+        const canvas = document.getElementById('voice-spectrum-canvas');
+        const ctx = canvas ? canvas.getContext('2d') : null;
 
         function drawVisualizer() {
           if (!isVoiceCallActive) return;
           voiceAnimFrameId = requestAnimationFrame(drawVisualizer);
-          if (voiceState === 'LISTENING' && !isVoiceMuted && voiceAnalyser) {
-            voiceAnalyser.getByteFrequencyData(dataArray);
-            let sum = 0;
-            for (let i = 0; i < dataArray.length; i++) sum += dataArray[i];
-            const avg = sum / dataArray.length;
+
+          if (!voiceAnalyser) return;
+          voiceAnalyser.getByteFrequencyData(freqData);
+
+          let sum = 0;
+          for (let i = 0; i < freqData.length; i++) sum += freqData[i];
+          const avg = sum / freqData.length;
+
+          // Scale orb
+          if (core) {
             const scale = 1 + Math.min(0.35, (avg / 128) * 0.35);
-            if (core) {
-              core.style.transform = `scale(${scale})`;
+            core.style.transform = `scale(${scale})`;
+          }
+
+          // Draw real-time spectrum equalizer bars on canvas
+          if (ctx && canvas) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            const numBars = 20;
+            const barWidth = Math.floor(canvas.width / numBars) - 2;
+
+            for (let i = 0; i < numBars; i++) {
+              const binIndex = Math.min(freqData.length - 1, Math.floor((i / numBars) * freqData.length));
+              const val = freqData[binIndex] || 0;
+              const barHeight = Math.max(2, (val / 255) * (canvas.height - 4));
+              const x = i * (barWidth + 2);
+              const y = canvas.height - barHeight;
+
+              // Green phosphor to cyan gradient
+              const grad = ctx.createLinearGradient(0, y, 0, canvas.height);
+              grad.addColorStop(0, '#00e5ff');
+              grad.addColorStop(1, '#00ff41');
+
+              ctx.fillStyle = isVoiceMuted ? '#ff0033' : grad;
+              ctx.fillRect(x, y, barWidth, barHeight);
             }
           }
         }
@@ -4179,14 +5015,196 @@
       }
     }
 
+    // ── 100% OFFLINE PCM AUDIO RECORDER & WAV ENCODER ──
+    function setupOfflineAudioProcessor(source) {
+      if (!voiceAudioCtx || offlineAudioProcessor) return;
+      try {
+        offlineAudioProcessor = voiceAudioCtx.createScriptProcessor(4096, 1, 1);
+        source.connect(offlineAudioProcessor);
+        offlineAudioProcessor.connect(voiceAudioCtx.destination);
+
+        offlineAudioProcessor.onaudioprocess = (e) => {
+          if (!isVoiceCallActive || isVoiceMuted || isSpeakingAssistant) return;
+          const inputData = e.inputBuffer.getChannelData(0);
+
+          // Calculate RMS for voice activity
+          let sum = 0;
+          for (let i = 0; i < inputData.length; i++) {
+            sum += inputData[i] * inputData[i];
+          }
+          const rms = Math.sqrt(sum / inputData.length);
+
+          // If Push-To-Talk is active, always accumulate
+          if (isPttActive) {
+            offlinePcmChunks.push(new Float32Array(inputData));
+            return;
+          }
+
+          // In hands-free offline mode: Auto-detect speech and silence
+          if (voiceEngineMode === 'OFFLINE') {
+            const speechThreshold = 0.02; // RMS threshold
+            if (rms > speechThreshold) {
+              offlinePcmChunks.push(new Float32Array(inputData));
+              offlineLastSpeechTime = Date.now();
+              if (!isOfflineRecording) {
+                isOfflineRecording = true;
+                setVoiceState('RECORDING', 'SPEAKING [OFFLINE]...');
+              }
+            } else if (isOfflineRecording) {
+              offlinePcmChunks.push(new Float32Array(inputData));
+              // If silence for 1.3 seconds after speech
+              if (Date.now() - offlineLastSpeechTime > 1300) {
+                isOfflineRecording = false;
+                dispatchOfflineRecordedAudio();
+              }
+            }
+          }
+        };
+      } catch (err) {
+        console.warn('ScriptProcessor setup for offline audio:', err);
+      }
+    }
+
+    function encodeWavBlob(float32Chunks, sampleRate = 16000) {
+      let totalLength = 0;
+      for (const chunk of float32Chunks) totalLength += chunk.length;
+      if (totalLength === 0) return null;
+
+      const merged = new Float32Array(totalLength);
+      let offset = 0;
+      for (const chunk of float32Chunks) {
+        merged.set(chunk, offset);
+        offset += chunk.length;
+      }
+
+      // Convert to 16-bit linear PCM
+      const int16Array = new Int16Array(totalLength);
+      for (let i = 0; i < totalLength; i++) {
+        const s = Math.max(-1, Math.min(1, merged[i]));
+        int16Array[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
+      }
+
+      // Build 44-byte WAV RIFF Header
+      const byteRate = sampleRate * 2; // 1 channel * 2 bytes/sample
+      const blockAlign = 2;
+      const dataSize = totalLength * 2;
+      const buffer = new ArrayBuffer(44 + dataSize);
+      const view = new DataView(buffer);
+
+      // "RIFF" chunk
+      writeString(view, 0, 'RIFF');
+      view.setUint32(4, 36 + dataSize, true);
+      writeString(view, 8, 'WAVE');
+
+      // "fmt " sub-chunk
+      writeString(view, 12, 'fmt ');
+      view.setUint32(16, 16, true); // Subchunk1Size
+      view.setUint16(20, 1, true);  // AudioFormat: PCM (1)
+      view.setUint16(22, 1, true);  // NumChannels: Mono (1)
+      view.setUint32(24, sampleRate, true);
+      view.setUint32(28, byteRate, true);
+      view.setUint16(32, blockAlign, true);
+      view.setUint16(34, 16, true); // BitsPerSample: 16
+
+      // "data" sub-chunk
+      writeString(view, 36, 'data');
+      view.setUint32(40, dataSize, true);
+
+      // Copy PCM samples
+      const pcmBytes = new Uint8Array(buffer, 44);
+      pcmBytes.set(new Uint8Array(int16Array.buffer));
+
+      return new Blob([buffer], { type: 'audio/wav' });
+    }
+
+    function writeString(view, offset, str) {
+      for (let i = 0; i < str.length; i++) {
+        view.setUint8(offset + i, str.charCodeAt(i));
+      }
+    }
+
+    async function dispatchOfflineRecordedAudio() {
+      if (offlinePcmChunks.length === 0) return;
+      const chunks = offlinePcmChunks;
+      offlinePcmChunks = [];
+
+      const wavBlob = encodeWavBlob(chunks, voiceAudioCtx ? voiceAudioCtx.sampleRate : 16000);
+      if (!wavBlob || wavBlob.size < 4000) {
+        setVoiceState('LISTENING');
+        return;
+      }
+
+      setVoiceState('THINKING', 'DECRYPTING LOCAL SAPI STT...');
+
+      try {
+        const res = await fetch('/api/voice/stt', {
+          method: 'POST',
+          headers: { 'Content-Type': 'audio/wav' },
+          body: wavBlob
+        });
+        const data = await res.json();
+        const transcript = (data.transcript || '').trim();
+
+        if (transcript && transcript !== 'EMPTY') {
+          updateVoiceCaption(transcript, 'user');
+          handleUserVoiceUtterance(transcript);
+        } else {
+          setVoiceState('LISTENING');
+        }
+      } catch (err) {
+        console.error('Offline STT transmission error:', err);
+        setVoiceState('LISTENING');
+      }
+    }
+
+    // Push-To-Talk handlers
+    function startOfflinePTT(e) {
+      if (e) e.preventDefault();
+      if (!isVoiceCallActive) return;
+      if (isSpeakingAssistant) triggerBargeIn();
+
+      isPttActive = true;
+      offlinePcmChunks = [];
+      const pttBtn = document.getElementById('voice-ptt-btn');
+      const pttLabel = document.getElementById('voice-ptt-label');
+      if (pttBtn) pttBtn.classList.add('recording');
+      if (pttLabel) pttLabel.textContent = 'TRANSMITTING... (RELEASE)';
+      setVoiceState('RECORDING', 'RECORDING AUDIO...');
+    }
+
+    function stopOfflinePTT(e) {
+      if (e) e.preventDefault();
+      if (!isVoiceCallActive || !isPttActive) return;
+      isPttActive = false;
+
+      const pttBtn = document.getElementById('voice-ptt-btn');
+      const pttLabel = document.getElementById('voice-ptt-label');
+      if (pttBtn) pttBtn.classList.remove('recording');
+      if (pttLabel) pttLabel.textContent = 'HOLD TO TRANSMIT';
+
+      dispatchOfflineRecordedAudio();
+    }
+
+    // ── SPEECH RECOGNITION SESSION CONTROLLER ──
     function startVoiceSession() {
       if (window.speechSynthesis) window.speechSynthesis.cancel();
       initVoiceAudioVisualizer();
+      startVoiceRecognitionEngine();
+    }
 
+    function startVoiceRecognitionEngine() {
+      if (voiceEngineMode === 'OFFLINE') {
+        // In offline mode, the WebAudio ScriptProcessor handles audio locally
+        setVoiceState('LISTENING', 'LISTENING [OFFLINE SAPI]');
+        return;
+      }
+
+      // Online Web Speech API mode
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
       if (!SpeechRecognition) {
-        updateVoiceCaption("Speech recognition not supported in this browser. You can type in the search bar below.", 'assistant');
-        setVoiceState('IDLE', 'No Web Speech API');
+        voiceEngineMode = 'OFFLINE';
+        updateVoiceModeUI();
+        setVoiceState('LISTENING', 'LISTENING [OFFLINE SAPI]');
         return;
       }
 
@@ -4197,12 +5215,11 @@
         voiceRecognition.lang = 'en-US';
 
         voiceRecognition.onstart = () => {
-          if (!isVoiceMuted) setVoiceState('LISTENING');
+          if (!isVoiceMuted) setVoiceState('LISTENING', 'LISTENING [ONLINE]');
         };
 
         voiceRecognition.onresult = (event) => {
           if (isVoiceMuted) return;
-
           let interimTranscript = '';
           let finalTranscript = '';
 
@@ -4218,10 +5235,6 @@
             triggerBargeIn();
           }
 
-          if (interimTranscript) {
-            updateVoiceCaption(interimTranscript, 'user');
-          }
-
           if (finalTranscript.trim()) {
             updateVoiceCaption(finalTranscript.trim(), 'user');
             handleUserVoiceUtterance(finalTranscript.trim());
@@ -4230,32 +5243,33 @@
 
         voiceRecognition.onerror = (event) => {
           console.warn('Voice recognition error:', event.error);
-          if (event.error === 'not-allowed') {
-            updateVoiceCaption("⚠️ Microphone access blocked. Please allow microphone permissions in Windows and browser settings.", 'assistant');
-            setVoiceState('IDLE', 'Mic Denied');
-          } else if (event.error === 'network') {
-            updateVoiceCaption("ℹ️ Offline mode: browser speech cloud unreachable. Type above or speak into terminal.", 'assistant');
-            setVoiceState('IDLE', 'Offline');
-          } else if (event.error === 'no-speech') {
-            updateVoiceCaption("No speech detected. Listening...", 'assistant');
-            setVoiceState('LISTENING');
-          } else {
-            updateVoiceCaption(`Notice: ${event.error}. Say something or type above.`, 'assistant');
-            setVoiceState('LISTENING');
+          if (event.error === 'network' || event.error === 'service-not-allowed') {
+            // Auto-switch to 100% offline local SAPI engine!
+            voiceEngineMode = 'OFFLINE';
+            updateVoiceModeUI();
+            setVoiceState('LISTENING', 'OFFLINE LOCAL SAPI ACTIVE');
           }
         };
 
         voiceRecognition.onend = () => {
-          if (isVoiceCallActive && !isVoiceMuted) {
+          if (isVoiceCallActive && !isVoiceMuted && voiceEngineMode === 'ONLINE') {
             try { voiceRecognition.start(); } catch (e) {}
           }
         };
 
         voiceRecognition.start();
       } catch (err) {
-        console.error('Failed to start voice recognition:', err);
-        updateVoiceCaption("Voice recognition could not start. You can type below.", 'assistant');
-        setVoiceState('IDLE', 'Speech Error');
+        console.warn('Web Speech recognition start error, falling back to offline:', err);
+        voiceEngineMode = 'OFFLINE';
+        updateVoiceModeUI();
+        setVoiceState('LISTENING', 'OFFLINE LOCAL SAPI ACTIVE');
+      }
+    }
+
+    function stopVoiceRecognitionEngine() {
+      if (voiceRecognition) {
+        try { voiceRecognition.abort(); } catch (e) {}
+        voiceRecognition = null;
       }
     }
 
@@ -4271,13 +5285,18 @@
 
     function stopVoiceSession() {
       isVoiceCallActive = false;
-      if (voiceRecognition) {
-        try { voiceRecognition.abort(); } catch (e) {}
-        voiceRecognition = null;
-      }
+      isOfflineRecording = false;
+      isPttActive = false;
+      offlinePcmChunks = [];
+      stopVoiceRecognitionEngine();
+
       if (voiceAnimFrameId) {
         cancelAnimationFrame(voiceAnimFrameId);
         voiceAnimFrameId = null;
+      }
+      if (offlineAudioProcessor) {
+        try { offlineAudioProcessor.disconnect(); } catch(e) {}
+        offlineAudioProcessor = null;
       }
       if (voiceMicrophoneStream) {
         voiceMicrophoneStream.getTracks().forEach(track => track.stop());
@@ -4298,9 +5317,9 @@
       if (!transcript || !isVoiceCallActive) return;
 
       const clean = transcript.toLowerCase().trim().replace(/[.!?]/g, '');
-      if (clean === 'stop' || clean === 'freeze' || clean === 'cancel') {
+      if (clean === 'stop' || clean === 'freeze' || clean === 'cancel' || clean === 'terminate') {
         triggerBargeIn();
-        updateVoiceCaption("Call stopped.", 'assistant');
+        updateVoiceCaption("CALL TERMINATED BY USER COMMAND.", 'assistant');
         fetch('/api/voice/control', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -4343,22 +5362,25 @@
 
         const displayText = data.display_text || data.spoken_text || 'Understood.';
         const spokenText = data.spoken_text || displayText;
+        const latencyMs = data.latency_ms || null;
+
+        const perfStats = {
+          speed: latencyMs ? (spokenText.length / Math.max(0.1, latencyMs / 1000)).toFixed(1) : '-',
+          token_count: spokenText.split(' ').length,
+          duration: latencyMs ? (latencyMs / 1000).toFixed(2) : '-'
+        };
 
         if (session) {
           session.messages.push({ role: 'bot', content: displayText });
-          appendMessageTurn('bot', displayText, {
-            speed: data.latency_ms ? (spokenText.length / Math.max(0.1, data.latency_ms / 1000)).toFixed(1) : '-',
-            token_count: spokenText.split(' ').length,
-            duration: data.latency_ms ? (data.latency_ms / 1000).toFixed(2) : '-'
-          });
+          appendMessageTurn('bot', displayText, perfStats);
           saveSessions();
         }
 
-        updateVoiceCaption(spokenText, 'assistant');
+        updateVoiceCaption(spokenText, 'assistant', perfStats);
         speakAssistantResponse(spokenText);
       } catch (err) {
         console.error('Voice utterance dispatch failed:', err);
-        updateVoiceCaption("Connection error communicating with voice server.", 'assistant');
+        updateVoiceCaption("TRANSMISSION ERROR: UNABLE TO REACH INFERENCE ROUTE.", 'assistant');
         setVoiceState('LISTENING');
       }
     }
@@ -4377,8 +5399,10 @@
       utterance.rate = 1.05;
       utterance.pitch = 1.0;
 
+      // Select offline / local Windows voice if available
       const voices = window.speechSynthesis.getVoices();
-      const preferred = voices.find(v => v.lang.startsWith('en') && (v.name.includes('Natural') || v.name.includes('Google') || v.name.includes('Samantha')));
+      const localOfflineVoice = voices.find(v => v.lang.startsWith('en') && (v.name.includes('David') || v.name.includes('Zira') || v.name.includes('Mark') || v.localService));
+      const preferred = localOfflineVoice || voices.find(v => v.lang.startsWith('en'));
       if (preferred) utterance.voice = preferred;
 
       utterance.onend = () => {
@@ -4409,7 +5433,7 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'barge_in' })
       }).catch(() => {});
-      setVoiceState('LISTENING', 'Interrupted & Listening');
+      setVoiceState('LISTENING', 'SIGINT TRIGGERED & LISTENING');
     }
 
     function toggleVoiceMute(forceState = null) {
@@ -4420,7 +5444,7 @@
 
       if (isVoiceMuted) {
         if (muteBtn) muteBtn.classList.add('active-muted');
-        if (muteText) muteText.innerText = 'Unmute';
+        if (muteText) muteText.innerText = 'SIGCONT (UNMUTE)';
         if (muteIcon) {
           muteIcon.innerHTML = `
             <line x1="1" y1="1" x2="23" y2="23"></line>
@@ -4432,7 +5456,7 @@
         setVoiceState('IDLE');
       } else {
         if (muteBtn) muteBtn.classList.remove('active-muted');
-        if (muteText) muteText.innerText = 'Mute';
+        if (muteText) muteText.innerText = 'SIGSTOP (MUTE)';
         if (muteIcon) {
           muteIcon.innerHTML = `
             <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path>
@@ -4455,6 +5479,9 @@
         triggerBargeIn();
       } else if (isVoiceMuted) {
         toggleVoiceMute(false);
+      } else {
+        // Toggle PTT or trigger transmission
+        dispatchOfflineRecordedAudio();
       }
     }
 
@@ -4471,8 +5498,47 @@
       }
     });
 
-    // Boot
-    window.addEventListener('DOMContentLoaded', () => {
+    function openVisualNotesInNewTab(cardId) {
+      const card = document.getElementById(cardId);
+      if (!card) return;
+      const iframe = card.querySelector('iframe');
+      if (!iframe || !iframe.srcdoc) return;
+      const w = window.open('', '_blank');
+      if (w) {
+        w.document.open();
+        w.document.write(iframe.srcdoc);
+        w.document.close();
+      }
+    }
+
+    // Boot — fetch prompt presets from backend before initialising UI
+    async function loadPresets() {
+      try {
+        const res = await fetch('/api/presets');
+        const data = await res.json();
+        PROMPT_A_TEXT       = data.prompt_a       || '';
+        PROMPT_B_TEXT       = data.prompt_b       || '';
+        FAST_VISUAL_TEXT    = data.fast_visual    || '';
+        CODE_IMAGE_TEXT     = data.code_image     || '';
+        CLAUDE_DEFAULT_PROMPT = data.claude_default || '';
+        // Pre-fetch template.html for instant live rendering
+        fetch('/template.html')
+          .then(r => r.text())
+          .then(t => { window.FAST_VISUAL_TEMPLATE_HTML = t; })
+          .catch(() => {});
+
+        // Seed settings with Fast Visual Notes as default if settings not yet saved
+        if (!localStorage.getItem(SETTINGS_KEY)) {
+          settings.system_prompt = FAST_VISUAL_TEXT || PROMPT_A_TEXT;
+          settings.temperature = 0.4;
+        }
+      } catch (e) {
+        console.warn('Could not load presets from /api/presets:', e);
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', async () => {
+      await loadPresets();
       loadSavedData();
       checkStatus();
       updateWebAccessUI();

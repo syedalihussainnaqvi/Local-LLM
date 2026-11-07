@@ -1,2 +1,3 @@
 {"timestamp": 1792674614.286546, "session_id": "default", "cwd": "C:\\Users\\Jahan\\Downloads\\chat_model_final_adapter", "command": "python --version", "tier": "T1_ROUTINE", "exit_code": 0, "duration": 0.433, "is_trusted_session": false}
 {"timestamp": 1792675048.740718, "session_id": "default", "cwd": "C:\\Users\\Jahan\\Downloads\\chat_model_final_adapter", "command": "echo Integration smoke test PASS", "tier": "T1_ROUTINE", "exit_code": 0, "duration": 0.361, "is_trusted_session": false}
+{"timestamp": 1792675182.703569, "session_id": "default", "cwd": "C:\\Users\\Jahan\\Downloads\\chat_model_final_adapter", "command": "dir C:\\Users", "tier": "T1_ROUTINE", "exit_code": 0, "duration": 0.446, "is_trusted_session": false}

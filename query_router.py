@@ -1,4 +1,4 @@
-"""Intelligent query routing module for local LLM, local RAG, direct URL, and automatic live web retrieval."""
+"""Intelligent query routing module for local AI, local RAG, direct URL, and automatic live web retrieval."""
 
 import logging
 import re
@@ -13,11 +13,57 @@ logger = logging.getLogger("query_router")
 # Regex to detect raw URLs directly in user prompt
 URL_PATTERN = re.compile(r"https?://[^\s<>\"']+", re.IGNORECASE)
 
-# Trivial greetings/farewells that don't need web access
+# Conversational patterns (Greetings, pleasantries, identity, chit-chat, jokes, stories in English & Urdu/Hindi)
+CONVERSATIONAL_PATTERNS = [
+    # English greetings & pleasantries
+    re.compile(r"^(hi|hello|hey|heyy|heya|howdy|hola|greetings|good\s*(morning|afternoon|evening|day|night))[!?,. ]*$", re.IGNORECASE),
+    re.compile(r"^(how\s+are\s+you(\s+doing)?(\s+today)?|how\s+(r|re)\s+u|how('s|s)\s+it\s+going|how\s+is\s+it\s+going|how\s+have\s+you\s+been|how\s+do\s+you\s+do)[!?,. ]*$", re.IGNORECASE),
+    re.compile(r"^(what('s|s)\s+up|what\s+is\s+up|sup|wassup|what('s|s)\s+new)[!?,. ]*$", re.IGNORECASE),
+    re.compile(r"^(how('s|s)\s+your\s+day(\s+going|\s+been|\s+today)?|how\s+is\s+your\s+day)[!?,. ]*$", re.IGNORECASE),
+    re.compile(r"^(what\s+are\s+you\s+doing(\s+today|\s+now)?|what\s+are\s+you\s+up\s+to(\s+today)?)[!?,. ]*$", re.IGNORECASE),
+    re.compile(r"^(nice\s+to\s+meet\s+you|glad\s+to\s+meet\s+you|pleased\s+to\s+meet\s+you)[!?,. ]*$", re.IGNORECASE),
+    re.compile(r"^(thanks|thank\s+you|thanks\s+a\s+lot|thank\s+you\s+so\s+much|thx)[!?,. ]*$", re.IGNORECASE),
+    re.compile(r"^(bye|goodbye|see\s+you|see\s+ya|talk\s+to\s+you\s+later|take\s+care|have\s+a\s+good\s+day)[!?,. ]*$", re.IGNORECASE),
+
+    # Compound greetings (e.g., "hi how are you", "hello, how are you today?")
+    re.compile(r"^(hi|hello|hey|greetings|good\s*(morning|afternoon|evening|day))[,!?. ]+(how\s+are\s+you.*|how('s|s)\s+it\s+going.*|what('s|s)\s+up.*|what\s+are\s+you\s+up\s+to.*)[!?,. ]*$", re.IGNORECASE),
+
+    # Urdu / Hindi / Roman Urdu greetings & pleasantries
+    re.compile(r"^(salam|as-salam|assalam|assalam\s*o?\s*alaikum|assalamu\s*alaikum|walaikum\s*assalam|adaab|namaste|sat\s*sri\s*akal|pranam)[!?,. ]*$", re.IGNORECASE),
+    re.compile(r"^(kya\s+haal\s+(hai|hein)?|kya\s+hal\s+hai|kese\s+ho(\s+aap)?|kaise\s+ho(\s+aap)?|kaise\s+hain(\s+aap)?|aap\s+kaise\s+hain|ap\s+kese\s+ho|kya\s+chal\s+raha\s+hai|kya\s+ho\s+raha\s+hai|kya\s+kar\s+rahe\s+ho|sab\s+theek\s+hai|theek\s+ho)[!?,. ]*$", re.IGNORECASE),
+    re.compile(r"^(shukriya|bohot\s+shukriya|dhanyawad|allah\s+hafiz|khuda\s+hafiz)[!?,. ]*$", re.IGNORECASE),
+    re.compile(r"^(salam|assalam\s*o?\s*alaikum)[,!?. ]+(kya\s+haal.*|kaise\s+ho.*|kese\s+ho.*)[!?,. ]*$", re.IGNORECASE),
+
+    # Bot identity, Persona, & Self-inquiry
+    re.compile(r"^(who\s+are\s+you|who\s+r\s+u|what\s+are\s+you|what\s+is\s+your\s+name|what('s|s)\s+your\s+name|who\s+made\s+you|who\s+created\s+you|who\s+built\s+you)[!?,. ]*$", re.IGNORECASE),
+    re.compile(r"^(introduce\s+yourself|tell\s+me\s+about\s+yourself|tell\s+me\s+who\s+you\s+are)[!?,. ]*$", re.IGNORECASE),
+    re.compile(r"^(what\s+can\s+you\s+do(\s+today)?|what\s+are\s+your\s+capabilities|how\s+can\s+you\s+help\s+me|can\s+you\s+help\s+me|help\s+me)[!?,. ]*$", re.IGNORECASE),
+    re.compile(r"^(are\s+you\s+(an?\s+ai|artificial\s+intelligence|a\s+robot|a\s+bot|a\s+human|real|working\s+currently))[!?,. ]*$", re.IGNORECASE),
+    re.compile(r"^(ap\s+kon\s+ho|aap\s+kaun\s+hain|tum\s+kaun\s+ho|tum\s+kon\s+ho|tumhara\s+naam\s+kya\s+hai|ap\s+ka\s+naam\s+kya\s+hai)[!?,. ]*$", re.IGNORECASE),
+
+    # Jokes, Casual stories, Entertainment
+    re.compile(r"^(tell\s+me\s+(a|another)?\s*joke|tell\s+a\s+joke|make\s+me\s+laugh|say\s+something\s+funny)[!?,. ]*$", re.IGNORECASE),
+    re.compile(r"^(tell\s+me\s+(a|another)?\s*story|tell\s+a\s+story|write\s+a\s+short\s+story)[!?,. ]*$", re.IGNORECASE),
+]
+
+# Legacy single regex maintained for backward compatibility
 GREETING_REGEX = re.compile(
     r"^(hi|hello|hey|greetings|howdy|good\s*(morning|afternoon|evening|day)|thanks|thank you|bye|goodbye)[!.? ]*$",
     re.IGNORECASE,
 )
+
+
+def is_conversational_or_common_query(prompt: str) -> bool:
+    """
+    Detect if query is a simple greeting, pleasantry, bot identity inquiry, joke, or casual chat
+    that should be answered directly by the LLM without triggering any web search, web scraping,
+    or knowledge-base retrieval.
+    """
+    cleaned = prompt.strip()
+    if not cleaned:
+        return True
+    return any(pattern.match(cleaned) for pattern in CONVERSATIONAL_PATTERNS)
+
 
 
 def is_trending_query(prompt: str) -> bool:
@@ -162,6 +208,10 @@ def is_desktop_action_query(prompt: str) -> bool:
 def is_temporal_or_web_needed(prompt: str) -> bool:
     """Check if query requires live web access (trending, news, sports, live rates, explicit web search)."""
     p_lower = prompt.lower()
+
+    # Fast check: Conversational greetings, chit-chat, and pure math NEVER need live web scraping
+    if is_conversational_or_common_query(prompt) or is_math_logic_or_reasoning(prompt):
+        return False
     
     # 0. Trending topics, Social Media search, Video Scriptwriting, and Verification
     if (
@@ -205,15 +255,33 @@ def is_temporal_or_web_needed(prompt: str) -> bool:
         
     # 5. Temporal triggers for current state of the world
     words = set(re.findall(r"\b[a-z0-9_]+\b", p_lower))
-    temporal_triggers = {
-        "today", "latest", "current", "currently", "weather", "forecast", "trending"
+
+    # Unconditional real-time events / weather / trends
+    unconditional_live_triggers = {"weather", "forecast", "trending"}
+    if words & unconditional_live_triggers:
+        return True
+
+    # "latest" refers to current dynamic news, releases, or breakthrough information
+    if "latest" in words:
+        return True
+
+    # Volatile / dynamic real-world subjects that require live web retrieval when combined with temporal terms
+    dynamic_real_world_subjects = {
+        "gold", "silver", "dollar", "usd", "pkr", "inr", "eur", "euro", "bitcoin", "btc", "crypto",
+        "price", "rate", "rates", "stock", "stocks", "market", "share", "shares",
+        "news", "headline", "headlines", "score", "scores", "match", "cricket", "football",
+        "temperature", "rain", "outage", "down", "status", "election", "standings", "event"
     }
-    if words & temporal_triggers:
-        # Ignore coding/algorithmic expressions like "current node", "current directory", "current index"
-        coding_phrases = ["current node", "current pointer", "current index", "current directory", "current element", "current value"]
+
+    if words & {"today", "current", "currently", "yesterday", "now"}:
+        # Ignore algorithmic/coding phrases
+        coding_phrases = ["current node", "current pointer", "current index", "current directory", "current element", "current value", "current state"]
         if any(cp in p_lower for cp in coding_phrases):
             return False
-        return True
+        # Only trigger web access if combined with dynamic real-world subjects
+        if words & dynamic_real_world_subjects:
+            return True
+        return False
         
     return False
 
@@ -343,7 +411,7 @@ class QueryRouter:
             return {
                 "route": "llm_only",
                 "extracted_urls": [],
-                "reason": "Pure math, number comparison, or logic reasoning; answering directly with local LLM without unnecessary web scraping",
+                "reason": "Pure math, number comparison, or logic reasoning; answering directly with local AI without unnecessary web scraping",
                 "search_query": cleaned_prompt,
             }
 
@@ -384,7 +452,7 @@ class QueryRouter:
                     "search_query": cleaned_prompt,
                 }
 
-        # Default fallback: answer directly with existing local LLM
+        # Default fallback: answer directly with existing local AI
         return {
             "route": "llm_only",
             "extracted_urls": [],

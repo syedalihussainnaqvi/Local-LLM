@@ -1,4 +1,4 @@
-"""Centralized configuration for the local LLM chatbot with web-scraping & RAG capabilities."""
+"""Centralized configuration for the local AI chatbot with web-scraping & RAG capabilities."""
 
 import os
 from pathlib import Path
@@ -22,7 +22,7 @@ MAX_REDIRECTS = int(os.environ.get("MAX_REDIRECTS", "5"))
 USER_AGENT = os.environ.get(
     "USER_AGENT",
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
-    "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 (ResearchBot/1.0; LocalLLM)"
+    "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 (ResearchBot/1.0; LocalAI)"
 )
 REQUEST_DELAY = float(os.environ.get("REQUEST_DELAY", "0.2"))  # polite delay between requests
 

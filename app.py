@@ -1,19 +1,46 @@
 import json
 import logging
 import os
+import shutil
 import sys
 import threading
 import time
+
 from flask import Flask, Response, jsonify, render_template, request
 
 import config
-from llm_engine import CLAUDE_SYSTEM_PROMPT, get_llm_engine
+from llm_engine import (
+    CLAUDE_SYSTEM_PROMPT,
+    PROMPT_A_MARKDOWN,
+    PROMPT_A_PREFILL,
+    PROMPT_A_SUFFIX,
+    PROMPT_B_HTML,
+    PROMPT_B_PREFILL,
+    PROMPT_B_SUFFIX,
+    RICH_FORMAT_SUFFIX,
+    RICH_RESPONSE_SHORT_PROMPT,
+    RICH_RESPONSE_SYSTEM_PROMPT,
+    FAST_VISUAL_PREFILL,
+    FAST_VISUAL_SUFFIX,
+    FAST_VISUAL_SYSTEM_PROMPT,
+    CODE_IMAGE_PREFILL,
+    CODE_IMAGE_SUFFIX,
+    CODE_IMAGE_SYSTEM_PROMPT,
+    CodeImageValidator,
+    is_image_or_diagram_request,
+    build_fast_visual_user_message,
+    build_page,
+    build_user_message,
+    extract_topic_and_purpose,
+    get_llm_engine,
+)
 from rag_pipeline import get_rag_pipeline
 from storage import get_storage
 from trending_engine import get_trending_engine
 from social_scraper import get_social_scraper
 from verification_engine import get_verification_engine
 from script_engine import get_script_engine
+from image_router import wants_image, route_image_request
 from desktop_agent import get_desktop_agent
 
 # Setup logging
@@ -86,16 +113,88 @@ def chat():
     user_prompt = data.get("prompt", "").strip()
     system_prompt = data.get("system_prompt", "").strip() or CLAUDE_SYSTEM_PROMPT
     history = data.get("history", [])
-    max_tokens = int(data.get("max_tokens", 4096))
+    max_tokens = min(int(data.get("max_tokens", 1024)), 2048)
     temperature = float(data.get("temperature", 0.7))
     top_p = float(data.get("top_p", 0.9))
     search_mode = data.get("search_mode", "auto")
     web_access_enabled = data.get("web_access_enabled", config.WEB_ACCESS_ENABLED)
+    prefill = data.get("prefill", None)
 
     if not user_prompt:
         return jsonify({"error": "Prompt cannot be empty"}), 400
 
+    # Format enforcement for visual images/diagrams, notes/study/quiz requests
+    lower_prompt = user_prompt.lower()
+    is_code_image = (
+        "CAN create images, logos, icons" in system_prompt
+        or system_prompt == CODE_IMAGE_SYSTEM_PROMPT
+        or data.get("format_preset") == "code_image"
+        or (is_image_or_diagram_request(user_prompt) and not any(k in lower_prompt for k in ["quiz", "test me", "flashcard", "mcq"]))
+    )
+    is_fast_visual = (
+        "Output ONLY one valid JSON object" in system_prompt
+        or system_prompt == FAST_VISUAL_SYSTEM_PROMPT
+        or data.get("format_preset") == "fast_visual"
+    )
+    is_html_mode = "study-notes engine" in system_prompt or "const DATA=" in system_prompt
+    is_study_or_quiz = any(k in lower_prompt for k in ["quiz", "detailed note", "study note", "test me", "flashcard", "mcq", "exam prep"])
+
+    if is_code_image:
+        if not user_prompt.endswith(CODE_IMAGE_SUFFIX):
+            user_prompt += CODE_IMAGE_SUFFIX
+        if not system_prompt or system_prompt == CLAUDE_SYSTEM_PROMPT:
+            system_prompt = CODE_IMAGE_SYSTEM_PROMPT
+        if prefill is None:
+            prefill = CODE_IMAGE_PREFILL
+        temperature = min(temperature, 0.2)
+        max_tokens = min(max_tokens, 1800)
+    elif is_fast_visual:
+        if "TOPIC:" not in user_prompt.upper():
+            topic, purpose = extract_topic_and_purpose(user_prompt)
+            user_prompt = build_fast_visual_user_message(topic=topic, purpose=purpose)
+        if not user_prompt.endswith(FAST_VISUAL_SUFFIX):
+            user_prompt += FAST_VISUAL_SUFFIX
+        if prefill is None:
+            prefill = FAST_VISUAL_PREFILL
+        temperature = min(temperature, 0.4)
+        max_tokens = min(max_tokens, 1500)
+    elif is_html_mode:
+        if not user_prompt.endswith(PROMPT_B_SUFFIX):
+            user_prompt += PROMPT_B_SUFFIX
+        if prefill is None:
+            prefill = PROMPT_B_PREFILL
+    elif is_study_or_quiz:
+        # Part 2 Topic Lock: Structure user prompt to lock subject and prevent topic drift
+        if "TOPIC:" not in user_prompt.upper():
+            topic, purpose = extract_topic_and_purpose(user_prompt)
+            user_prompt = build_user_message(topic=topic, purpose=purpose)
+        if not (user_prompt.endswith(PROMPT_A_SUFFIX) or user_prompt.endswith(RICH_FORMAT_SUFFIX)):
+            user_prompt += PROMPT_A_SUFFIX
+        if not system_prompt or system_prompt == CLAUDE_SYSTEM_PROMPT:
+            system_prompt = PROMPT_A_MARKDOWN
+        if prefill is None:
+            prefill = PROMPT_A_PREFILL
+        temperature = min(temperature, 0.5)
+
     def generate_events():
+        # ── IMAGE FAST-PATH (4-layer image router) ────────────────────────────
+        # If the user is asking for an image/diagram and the code_image preset
+        # is NOT explicitly set (which has its own dedicated flow below), we
+        # intercept here so the refusal can never reach the user.
+        _is_explicit_code_image = (
+            is_code_image and data.get("format_preset") == "code_image"
+        )
+        if wants_image(user_prompt) and not _is_explicit_code_image:
+            try:
+                result = route_image_request(engine, user_prompt)
+                html_code = result["html"]
+                # Stream the HTML as a single token then done
+                yield f"data: {json.dumps({'token': html_code})}\n\n"
+                yield f"data: {json.dumps({'done': True, 'reply': html_code, 'token_count': 1, 'duration': 0, 'speed': 0})}\n\n"
+                return
+            except Exception as img_exc:
+                logger.warning("image_router failed, falling through to normal pipeline: %s", img_exc)
+
         # Step 1: Execute RAG orchestration with real-time streaming progress events
         try:
             rag_result = None
@@ -153,6 +252,7 @@ def chat():
                 max_tokens=max_tokens,
                 temperature=effective_temperature,
                 top_p=top_p,
+                prefill=prefill,
             )
 
             for item in stream_gen:
@@ -476,7 +576,57 @@ def manage_config():
     })
 
 
+
+@app.route("/api/voice/stt", methods=["POST"])
+def voice_stt_offline():
+    """Offline STT endpoint: accepts a WAV/webm audio blob, converts & transcribes
+    using Windows SAPI System.Speech (100% local, no cloud). Returns transcript."""
+    import tempfile, os, subprocess
+    from agent.voice.audio_engine import WindowsSTT
+
+    audio_data = request.get_data()
+    if not audio_data:
+        return jsonify({"error": "No audio data received"}), 400
+
+    tmp_dir = "eval/fixtures"
+    os.makedirs(tmp_dir, exist_ok=True)
+
+    raw_path = os.path.join(tmp_dir, f"stt_upload_{int(time.time()*1000)}.bin")
+    wav_path = os.path.join(tmp_dir, f"stt_converted_{int(time.time()*1000)}.wav")
+
+    try:
+        with open(raw_path, "wb") as f:
+            f.write(audio_data)
+
+        if audio_data.startswith(b"RIFF"):
+            shutil.copy(raw_path, wav_path)
+        else:
+            ffmpeg_available = shutil.which("ffmpeg") is not None
+            if ffmpeg_available:
+                subprocess.run(
+                    ["ffmpeg", "-y", "-i", raw_path,
+                     "-ar", "16000", "-ac", "1", "-f", "wav", wav_path],
+                    capture_output=True, timeout=15
+                )
+            else:
+                shutil.copy(raw_path, wav_path)
+
+        result = WindowsSTT.transcribe_wav(wav_path, timeout_seconds=15.0)
+        return jsonify(result)
+    except Exception as e:
+        logger.error(f"Offline STT error: {e}", exc_info=True)
+        return jsonify({"transcript": "", "error": str(e)}), 500
+    finally:
+        for p in [raw_path, wav_path]:
+            try:
+                if os.path.exists(p):
+                    os.remove(p)
+            except Exception:
+                pass
+
+
 @app.route("/api/voice", methods=["POST"])
+
 def voice_utterance():
     """Real-time voice turn endpoint bridging browser and VoicePipeline."""
     data = request.get_json() or {}
@@ -532,6 +682,68 @@ def voice_control():
             "history_len": len(voice_pipeline.conversation_history),
         })
     return jsonify({"error": f"Unknown action: {action}"}), 400
+
+
+@app.route("/api/presets", methods=["GET"])
+def get_presets():
+    """Serve system-prompt presets as JSON so the frontend never embeds raw strings in JS."""
+    return jsonify({
+        "prompt_a": PROMPT_A_MARKDOWN,
+        "prompt_b": PROMPT_B_HTML,
+        "fast_visual": FAST_VISUAL_SYSTEM_PROMPT,
+        "fast_visual_prefill": FAST_VISUAL_PREFILL,
+        "code_image": CODE_IMAGE_SYSTEM_PROMPT,
+        "code_image_prefill": CODE_IMAGE_PREFILL,
+        "claude_default": CLAUDE_SYSTEM_PROMPT,
+    })
+
+
+@app.route("/template.html", methods=["GET"])
+def serve_template_html():
+    """Serve the Fast Visual Study-Notes template HTML."""
+    return render_template("template.html")
+
+
+@app.route("/api/render-notes", methods=["POST"])
+def render_notes_endpoint():
+    """Compile JSON or model response into a standalone visual notes HTML page."""
+    data = request.get_json() or {}
+    model_text = data.get("model_text") or data.get("text") or ""
+    if not model_text and "blocks" in data:
+        model_text = json.dumps(data)
+    if not model_text:
+        return jsonify({"error": "No model_text or JSON blocks provided"}), 400
+
+    try:
+        html = build_page(model_text)
+        return Response(html, mimetype="text/html")
+    except Exception as e:
+        logger.error(f"Error compiling visual notes page: {e}", exc_info=True)
+        return jsonify({"error": str(e)}), 400
+
+
+@app.route("/api/validate-image", methods=["POST"])
+def validate_image_endpoint():
+    """Validate model-generated image/diagram code against the 17 Error Prevention rules.
+
+    Accepts: { "code": "...generated HTML..." }
+    Returns: { "valid": true/false, "errors": [...], "repair_prompt": "..." }
+    """
+    req_data = request.get_json() or {}
+    code_text = req_data.get("code", "").strip()
+    if not code_text:
+        return jsonify({"error": "No code provided"}), 400
+
+    is_valid, errors, extracted = CodeImageValidator.validate(code_text)
+    repair_prompt = (
+        CodeImageValidator.build_repair_message(extracted, errors)
+        if not is_valid else None
+    )
+    return jsonify({
+        "valid": is_valid,
+        "errors": errors,
+        "repair_prompt": repair_prompt,
+    })
 
 
 @app.route("/")

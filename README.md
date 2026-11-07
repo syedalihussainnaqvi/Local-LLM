@@ -10,7 +10,7 @@ tags:
 - web-scraper
 ---
 
-# Local LLM Chatbot with Custom Web-Scraping & RAG Integration
+# Local AI Chatbot with Custom Web-Scraping & RAG Integration
 
 This repository hosts a local instruction-tuned LLM chatbot powered by **Qwen2.5-1.5B-Instruct** and a fine-tuned **PEFT LoRA adapter**, integrated with an enterprise-grade **Custom Web-Scraping & Retrieval-Augmented Generation (RAG)** system.
 
@@ -63,7 +63,7 @@ The system allows the model to retrieve information from websites, store and ind
                                       |
                                       v
                           +-----------+-----------+
-                          | Existing Local LLM    |
+                          | Existing Local AI     |
                           | (Qwen2.5-1.5B + LoRA) |
                           +-----------+-----------+
                                       |

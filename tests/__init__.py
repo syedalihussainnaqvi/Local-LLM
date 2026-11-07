@@ -1,1 +1,1 @@
-"""Test suite package for local LLM chatbot with web-scraping RAG."""
+"""Test suite package for local AI chatbot with web-scraping RAG."""

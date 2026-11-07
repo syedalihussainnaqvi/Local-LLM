@@ -118,8 +118,35 @@ def cmd_terminal(args):
 
 
 def cmd_call(args):
+    from llm_engine import get_llm_engine
+
+    llm_engine = get_llm_engine()
+
+    # Load model synchronously before starting the call so every turn gets a real reply.
+    print("[*] Loading language model... (this may take a moment on first run)")
+    try:
+        llm_engine.load_model()
+        print("[*] Model loaded. Starting voice call.")
+    except Exception as e:
+        print(f"[ERROR] Could not load model: {e}")
+        print("[*] Proceeding in degraded mode – replies will be limited.")
+
+    def _llm_gen(user_query: str) -> str:
+        """Bridge from VoicePipeline to the loaded LLM engine."""
+        if not llm_engine.is_loaded:
+            return "The language model is still loading. Please wait a moment and try again."
+        try:
+            res = llm_engine.generate_answer(
+                question=user_query,
+                max_tokens=256,
+                temperature=0.7,
+            )
+            return res.get("reply") or "I heard you but could not generate a reply."
+        except Exception as exc:
+            return f"I encountered an error generating a response: {exc}"
+
     pipeline = VoicePipeline()
-    pipeline.run_live_call_session()
+    pipeline.run_live_call_session(llm_generate_fn=_llm_gen)
 
 
 def cmd_voice_doctor(args):

@@ -107,7 +107,7 @@ class RedditAdapter(BaseSocialAdapter):
             return [SocialPost(**item) for item in fixture[:limit]]
 
         url = f"https://www.reddit.com/search.json?q={quote_plus(query)}&limit={limit}&sort=relevance"
-        headers = {"User-Agent": "AntigravityResearchBot/1.0 (Public Research; LocalLLM)"}
+        headers = {"User-Agent": "AntigravityResearchBot/1.0 (Public Research; LocalAI)"}
         try:
             resp = requests.get(url, headers=headers, timeout=5.0)
             if resp.status_code == 429:

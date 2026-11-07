@@ -251,9 +251,13 @@ class VoicePipeline:
         t_llm_start = time.time()
         try:
             if llm_generate_fn is None:
-                raw_reply = "I am on it."
+                logger.error("[S6 LLM] llm_generate_fn is None — no LLM wired into this pipeline call. "
+                             "Pass a callable llm_generate_fn to process_user_utterance().")
+                raw_reply = ("I'm sorry, the language model is not connected to this voice session. "
+                             "Please restart the voice call — the system is still initializing.")
             else:
                 raw_reply = llm_generate_fn(transcript)
+
         except Exception as e:
             logger.error(f"[S6 LLM Error] Exception during LLM generation: {e}", exc_info=True)
             raw_reply = f"I encountered an error generating a response: {e}"
@@ -309,12 +313,19 @@ class VoicePipeline:
             spoken_text = turn.get("spoken_text", "Done.")
             tmp_dir = Path("eval/fixtures")
             tmp_dir.mkdir(parents=True, exist_ok=True)
-            out_wav = str(tmp_dir / f"injected_out_{int(time.time()*1000)}.wav")
+            # Use pid + nanosecond timestamp to guarantee filename uniqueness in rapid stress tests
+            unique_id = f"{os.getpid()}_{time.monotonic_ns()}"
+            out_wav = str(tmp_dir / f"injected_out_{unique_id}.wav")
             tts_res = WindowsTTS.synthesize_to_wav(spoken_text, out_wav)
             turn["tts_bytes"] = tts_res.get("byte_length", 0)
             turn["tts_duration_ms"] = tts_res.get("duration_ms", 0.0)
             turn["tts_wav_path"] = out_wav
             logger.info(f"[S8 TTS Injected] Synthesized {tts_res.get('byte_length')} bytes in {tts_res.get('duration_ms')}ms")
+            # Clean up temp WAV to avoid filling eval/fixtures during stress tests
+            try:
+                Path(out_wav).unlink(missing_ok=True)
+            except Exception:
+                pass
 
         turn["total_pipeline_latency_ms"] = round((time.time() - t0) * 1000, 2)
         return turn

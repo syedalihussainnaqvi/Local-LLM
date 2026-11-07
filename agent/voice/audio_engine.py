@@ -275,7 +275,7 @@ class WindowsTTS:
     """Stage 8: Local offline Text-to-Speech using Windows System.Speech."""
 
     @staticmethod
-    def synthesize_to_wav(text: str, output_wav_path: str, timeout_seconds: float = 10.0) -> Dict[str, Any]:
+    def synthesize_to_wav(text: str, output_wav_path: str, timeout_seconds: float = 20.0) -> Dict[str, Any]:
         """Synthesize text to WAV file."""
         abs_path = str(Path(output_wav_path).resolve()).replace("\\", "/")
         clean_text = text.replace("'", " ").replace('"', " ").replace("\n", " ").strip()
@@ -291,19 +291,39 @@ class WindowsTTS:
         )
 
         t0 = time.time()
-        try:
-            res = subprocess.run(
-                ["powershell", "-NoProfile", "-Command", ps_script],
-                capture_output=True,
-                text=True,
-                timeout=timeout_seconds,
-            )
-        except subprocess.TimeoutExpired:
-            return {"error": "TTS Timeout", "duration_ms": (time.time() - t0) * 1000, "byte_length": 0}
+        byte_len = 0
+        last_error = None
+
+        for attempt in range(3):
+            # Stagger SAPI COM invocations: Windows SAPI SpeechSynthesizer is a COM object
+            # that can fail silently under rapid-successive calls (e.g. 20-run stress tests).
+            # A small pre-attempt delay (except on first attempt) prevents COM resource contention.
+            if attempt > 0:
+                time.sleep(0.25 * attempt)  # 250ms, 500ms backoff
+
+            cur_timeout = 8.0 if attempt == 0 else 6.0
+            try:
+                res = subprocess.run(
+                    ["powershell", "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-Command", ps_script],
+                    capture_output=True,
+                    text=True,
+                    timeout=cur_timeout,
+                )
+                # Brief filesystem flush wait — SAPI writes asynchronously on some Windows builds
+                time.sleep(0.15)
+                p = Path(abs_path)
+                if p.exists() and p.stat().st_size > 0:
+                    byte_len = p.stat().st_size
+                    break
+                elif res.stderr:
+                    logger.warning(f"[TTS] Attempt {attempt+1} stderr: {res.stderr.strip()[:200]}")
+            except subprocess.TimeoutExpired:
+                last_error = "TTS Timeout"
+                logger.warning(f"[TTS] Attempt {attempt+1} timed out after {cur_timeout}s")
 
         dur_ms = round((time.time() - t0) * 1000, 2)
-        p = Path(abs_path)
-        byte_len = p.stat().st_size if p.exists() else 0
+        if byte_len == 0 and last_error:
+            return {"error": last_error, "duration_ms": dur_ms, "byte_length": 0}
 
         return {
             "wav_path": abs_path,
